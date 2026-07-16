@@ -13,6 +13,11 @@ def test_static_export_contains_every_scenario() -> None:
 
     assert len(bundle["scenarios"]) == 128
     assert bundle["portfolio"]["data_status"]["stale"] is False
+    assert bundle["portfolio"]["config"]["defaults"]["selections"] == {
+        "network_automation": "none",
+        "reporting": "none",
+        "audit_automation": "none",
+    }
 
     selections = {
         "network_automation": "foundation",

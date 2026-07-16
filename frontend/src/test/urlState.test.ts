@@ -6,9 +6,9 @@ import type { PortfolioConfig } from "../types";
 const config = {
   defaults: {
     selections: {
-      network_automation: "foundation",
-      reporting: "foundation",
-      audit_automation: "foundation"
+      network_automation: "none",
+      reporting: "none",
+      audit_automation: "none"
     },
     execution_mode: "parallel"
   },
@@ -28,7 +28,7 @@ describe("URL scenario state", () => {
 
     expect(state.selections).toEqual({
       network_automation: "full",
-      reporting: "foundation",
+      reporting: "none",
       audit_automation: "none"
     });
     expect(state.executionMode).toBe("sequential");

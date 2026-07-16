@@ -38,9 +38,9 @@ const config: PortfolioConfig = {
   },
   defaults: {
     selections: {
-      network_automation: "foundation",
-      reporting: "foundation",
-      audit_automation: "foundation"
+      network_automation: "none",
+      reporting: "none",
+      audit_automation: "none"
     },
     execution_mode: "parallel"
   },
@@ -268,7 +268,7 @@ describe("App", () => {
     expect(screen.getByTestId("commitment-road-network_automation")).toBeVisible();
     expect(screen.getByLabelText("Network Automation commitment stops").querySelectorAll("button")).toHaveLength(4);
     expect(screen.getByTestId("network_automation-none")).toHaveAccessibleName("Stop 0: None");
-    expect(screen.getByTestId("network_automation-foundation")).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByTestId("network_automation-none")).toHaveAttribute("aria-pressed", "true");
     expect(screen.queryByText("Choose your commitment")).not.toBeInTheDocument();
     expect(screen.queryByText("Choose a stop. Every stop includes the work from each stop before it.")).not.toBeInTheDocument();
     expect(document.body).not.toHaveTextContent(/\$/);
@@ -390,7 +390,7 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "Reset scenario" }));
 
     expect(screen.getByRole("heading", { name: "Development Path" })).toBeVisible();
-    expect(window.location.search).toContain("network_automation=foundation");
+    expect(window.location.search).toContain("network_automation=none");
     expect(window.location.search).toContain("mode=parallel");
   });
 
@@ -418,9 +418,9 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "Review portfolio" }));
     await user.click(screen.getByTestId("share-scenario"));
     expect(await screen.findByText("Scenario link copied")).toBeVisible();
-    expect(window.location.search).toContain("network_automation=foundation");
-    expect(window.location.search).toContain("reporting=foundation");
-    expect(window.location.search).toContain("audit_automation=foundation");
+    expect(window.location.search).toContain("network_automation=none");
+    expect(window.location.search).toContain("reporting=none");
+    expect(window.location.search).toContain("audit_automation=none");
     expect(window.location.search).toContain("mode=parallel");
   });
 
@@ -439,7 +439,7 @@ describe("App", () => {
     await user.click(screen.getByTestId("share-scenario"));
     const dialog = await screen.findByRole("dialog", { name: "Scenario link" }, { timeout: 1500 });
     const link = within(dialog).getByLabelText("Link") as HTMLInputElement;
-    expect(link.value).toContain("network_automation=foundation");
+    expect(link.value).toContain("network_automation=none");
     expect(link.value).toContain("mode=parallel");
   });
 });

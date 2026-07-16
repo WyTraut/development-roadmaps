@@ -16,11 +16,11 @@ def request(config: PortfolioConfig, mode: str = "parallel", stage: str | None =
     return ScenarioRequest(selections=selections, execution_mode=mode)
 
 
-def test_foundation_baseline_uses_worksheet_packages_without_costs(
+def test_foundation_selection_uses_worksheet_packages_without_costs(
     config: PortfolioConfig,
     data_status: DataStatus,
 ) -> None:
-    result = PortfolioCalculator(config).calculate(request(config), data_status)
+    result = PortfolioCalculator(config).calculate(request(config, stage="foundation"), data_status)
 
     expected_ids = {
         package_id

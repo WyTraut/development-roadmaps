@@ -220,7 +220,7 @@ function App() {
     setExecutionMode(config!.defaults.execution_mode);
     setActiveRoadmapId(null);
     setScreen("chooser");
-    setToast("Scenario reset to the foundation baseline");
+    setToast("Scenario reset to Stop 0");
   }
 
   function openRoadmap(roadmapId: string) {
