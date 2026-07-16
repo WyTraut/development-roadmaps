@@ -1,0 +1,13 @@
+.DS_Store
+.env
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+frontend/node_modules/
+frontend/dist/
+frontend/coverage/
+frontend/public/data/portfolio.json
+outputs/
+work/
+*.tsbuildinfo

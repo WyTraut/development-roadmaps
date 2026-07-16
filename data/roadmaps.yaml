@@ -1,0 +1,760 @@
+portfolio:
+  title: Technology Portfolio Roadmaps
+  subtitle: Model delivery depth, investment, and organizational capacity across three internal IT paths.
+  program_label: Roadmap planning
+  currency: USD
+  last_updated: "2026-07-15"
+  illustrative: true
+  source_note: Working draft. Network Automation uses supplied inputs; Reporting and Audit Automation use planning assumptions that require owner validation.
+
+defaults:
+  selections:
+    network_automation: foundation
+    reporting: foundation
+    audit_automation: foundation
+  execution_mode: parallel
+
+impact_dimensions:
+  - key: efficiency
+    label: Efficiency
+    description: Reduction in manual effort, delays, and operational friction.
+  - key: risk_reduction
+    label: Risk reduction
+    description: Improvement in reliability, controls, and audit readiness.
+  - key: decision_visibility
+    label: Decision visibility
+    description: Timeliness and usefulness of information for leaders and operators.
+  - key: scalability
+    label: Scalability
+    description: Ability to support more volume and complexity without proportional staffing.
+
+work_packages:
+  - id: asset_inventory
+    name: Trusted asset inventory
+    description: Establish a governed inventory of network assets, ownership, lifecycle state, and criticality.
+    shared: true
+    dependencies: []
+    cost:
+      loaded_labor: { low: 20000, high: 28000 }
+      vendors: { low: 0, high: 2000 }
+      software_cloud: { low: 4000, high: 7000 }
+      contingency: { low: 2000, high: 4000 }
+    duration_months: { low: 1, high: 1.5 }
+    team_fte: { low: 1, high: 2 }
+    person_months: { low: 2, high: 3 }
+    confidence: high
+    risk: low
+    outcomes:
+      - One accountable source for asset identity and ownership.
+      - Reusable inventory coverage for automation, reporting, and controls.
+
+  - id: telemetry_pipeline
+    name: Normalized telemetry pipeline
+    description: Collect and normalize operational events, configuration state, and health signals.
+    shared: true
+    dependencies: [asset_inventory]
+    cost:
+      loaded_labor: { low: 28000, high: 38000 }
+      vendors: { low: 2000, high: 4000 }
+      software_cloud: { low: 6000, high: 10000 }
+      contingency: { low: 3000, high: 5000 }
+    duration_months: { low: 2, high: 3 }
+    team_fte: { low: 2, high: 3 }
+    person_months: { low: 4, high: 7 }
+    confidence: medium
+    risk: medium
+    outcomes:
+      - Consistent event and state data available to every roadmap.
+      - Reduced manual collection and reconciliation work.
+
+  - id: common_data_model
+    name: Common operational data model
+    description: Define shared business terms, quality rules, and ownership for operational and control data.
+    shared: true
+    dependencies: [telemetry_pipeline]
+    cost:
+      loaded_labor: { low: 22000, high: 30000 }
+      vendors: { low: 0, high: 2000 }
+      software_cloud: { low: 2000, high: 5000 }
+      contingency: { low: 2000, high: 4000 }
+    duration_months: { low: 1.5, high: 2.5 }
+    team_fte: { low: 1.5, high: 2.5 }
+    person_months: { low: 3, high: 5 }
+    confidence: medium
+    risk: medium
+    outcomes:
+      - Shared definitions for services, changes, incidents, and controls.
+      - Traceable data quality for executive and audit use.
+
+  - id: workflow_approvals
+    name: Workflow and approval framework
+    description: Provide reusable review, approval, rollback, and exception patterns for automated work.
+    shared: true
+    dependencies: [asset_inventory]
+    cost:
+      loaded_labor: { low: 20000, high: 27000 }
+      vendors: { low: 0, high: 2000 }
+      software_cloud: { low: 2000, high: 4000 }
+      contingency: { low: 2000, high: 3000 }
+    duration_months: { low: 1, high: 2 }
+    team_fte: { low: 1, high: 2 }
+    person_months: { low: 2, high: 4 }
+    confidence: high
+    risk: low
+    outcomes:
+      - Standard governance for automated changes and exceptions.
+      - Reusable evidence of who approved what and when.
+
+  - id: evidence_store
+    name: Governed evidence store
+    description: Retain source-linked evidence with lineage, retention, and access controls.
+    shared: true
+    dependencies: [common_data_model]
+    cost:
+      loaded_labor: { low: 18000, high: 24000 }
+      vendors: { low: 0, high: 2000 }
+      software_cloud: { low: 4000, high: 6000 }
+      contingency: { low: 2000, high: 3000 }
+    duration_months: { low: 1, high: 2 }
+    team_fte: { low: 1, high: 2 }
+    person_months: { low: 2, high: 3.5 }
+    confidence: high
+    risk: low
+    outcomes:
+      - Evidence can be reused across reporting and audit workflows.
+      - Clear retention and lineage for every retained artifact.
+
+  - id: safe_change_automation
+    name: Guarded change automation
+    description: Automate repeatable low-risk changes with prechecks, approvals, validation, and rollback.
+    shared: false
+    dependencies: [asset_inventory, workflow_approvals]
+    cost:
+      loaded_labor: { low: 25000, high: 34000 }
+      vendors: { low: 1000, high: 3000 }
+      software_cloud: { low: 2000, high: 4000 }
+      contingency: { low: 3000, high: 5000 }
+    duration_months: { low: 2, high: 3 }
+    team_fte: { low: 2, high: 3 }
+    person_months: { low: 4, high: 7 }
+    confidence: high
+    risk: medium
+    outcomes:
+      - Repeatable changes complete faster with fewer manual touches.
+      - Failed validation automatically halts or rolls back work.
+
+  - id: orchestration_library
+    name: Reusable orchestration library
+    description: Expand guarded automation into reusable service workflows and cross-system runbooks.
+    shared: false
+    dependencies: [safe_change_automation, telemetry_pipeline, common_data_model]
+    cost:
+      loaded_labor: { low: 30000, high: 42000 }
+      vendors: { low: 2000, high: 5000 }
+      software_cloud: { low: 3000, high: 6000 }
+      contingency: { low: 4000, high: 6000 }
+    duration_months: { low: 3, high: 4 }
+    team_fte: { low: 2, high: 3 }
+    person_months: { low: 6, high: 10 }
+    confidence: medium
+    risk: medium
+    outcomes:
+      - Common network workflows are assembled from governed building blocks.
+      - Automation coverage expands without recreating controls each time.
+
+  - id: closed_loop_remediation
+    name: Closed-loop remediation
+    description: Detect qualified conditions, choose an approved response, execute it, and verify recovery.
+    shared: false
+    dependencies: [orchestration_library, common_data_model]
+    cost:
+      loaded_labor: { low: 35000, high: 48000 }
+      vendors: { low: 2000, high: 5000 }
+      software_cloud: { low: 4000, high: 8000 }
+      contingency: { low: 4000, high: 7000 }
+    duration_months: { low: 3, high: 5 }
+    team_fte: { low: 2.5, high: 4 }
+    person_months: { low: 8, high: 15 }
+    confidence: medium
+    risk: high
+    outcomes:
+      - Approved fault classes recover with limited operator intervention.
+      - Every automated action produces a traceable outcome record.
+
+  - id: predictive_operations
+    name: Predictive operations
+    description: Use operational patterns to identify likely degradation and recommend preventative action.
+    shared: false
+    dependencies: [closed_loop_remediation, telemetry_pipeline]
+    cost:
+      loaded_labor: { low: 28000, high: 38000 }
+      vendors: { low: 1000, high: 4000 }
+      software_cloud: { low: 4000, high: 7000 }
+      contingency: { low: 3000, high: 5000 }
+    duration_months: { low: 2, high: 3 }
+    team_fte: { low: 2, high: 3 }
+    person_months: { low: 4, high: 8 }
+    confidence: low
+    risk: high
+    outcomes:
+      - Operators receive prioritized early-warning signals.
+      - Preventative actions can be promoted into governed automation.
+
+  - id: reporting_semantic_layer
+    name: Reporting semantic layer
+    description: Publish trusted operational measures with consistent definitions and ownership.
+    shared: false
+    dependencies: [common_data_model]
+    cost:
+      loaded_labor: { low: 18000, high: 26000 }
+      vendors: { low: 0, high: 2000 }
+      software_cloud: { low: 2000, high: 4000 }
+      contingency: { low: 2000, high: 3000 }
+    duration_months: { low: 1, high: 2 }
+    team_fte: { low: 1, high: 2 }
+    person_months: { low: 2, high: 4 }
+    confidence: high
+    risk: low
+    outcomes:
+      - Leaders and operators use the same definitions for core measures.
+      - Metric ownership and lineage are visible.
+
+  - id: operational_dashboards
+    name: Operational dashboard suite
+    description: Deliver role-focused views for service health, change performance, capacity, and exceptions.
+    shared: false
+    dependencies: [reporting_semantic_layer, telemetry_pipeline]
+    cost:
+      loaded_labor: { low: 20000, high: 28000 }
+      vendors: { low: 0, high: 2000 }
+      software_cloud: { low: 2000, high: 4000 }
+      contingency: { low: 2000, high: 4000 }
+    duration_months: { low: 1.5, high: 2.5 }
+    team_fte: { low: 1, high: 2 }
+    person_months: { low: 2, high: 5 }
+    confidence: high
+    risk: low
+    outcomes:
+      - Current service and delivery performance is visible on demand.
+      - Manual status compilation is reduced.
+
+  - id: self_service_reporting
+    name: Governed self-service reporting
+    description: Let approved users answer recurring questions without a bespoke analyst request.
+    shared: false
+    dependencies: [operational_dashboards, evidence_store]
+    cost:
+      loaded_labor: { low: 24000, high: 34000 }
+      vendors: { low: 1000, high: 3000 }
+      software_cloud: { low: 2000, high: 5000 }
+      contingency: { low: 3000, high: 4000 }
+    duration_months: { low: 2, high: 3 }
+    team_fte: { low: 1.5, high: 2.5 }
+    person_months: { low: 4, high: 7 }
+    confidence: medium
+    risk: medium
+    outcomes:
+      - Approved users build answers from governed measures.
+      - Recurring report requests no longer depend on analyst queues.
+
+  - id: predictive_insights
+    name: Predictive portfolio insights
+    description: Add trend, forecast, and anomaly views to focus leadership attention on emerging conditions.
+    shared: false
+    dependencies: [self_service_reporting, telemetry_pipeline]
+    cost:
+      loaded_labor: { low: 28000, high: 38000 }
+      vendors: { low: 1000, high: 4000 }
+      software_cloud: { low: 3000, high: 6000 }
+      contingency: { low: 3000, high: 5000 }
+    duration_months: { low: 2, high: 3 }
+    team_fte: { low: 1.5, high: 2.5 }
+    person_months: { low: 4, high: 7 }
+    confidence: low
+    risk: medium
+    outcomes:
+      - Emerging risks and capacity constraints are surfaced earlier.
+      - Forecast assumptions remain visible and reviewable.
+
+  - id: control_catalog
+    name: Unified control catalog
+    description: Map obligations, internal controls, owners, systems, and expected evidence in one model.
+    shared: false
+    dependencies: [common_data_model]
+    cost:
+      loaded_labor: { low: 16000, high: 23000 }
+      vendors: { low: 1000, high: 3000 }
+      software_cloud: { low: 1000, high: 3000 }
+      contingency: { low: 2000, high: 3000 }
+    duration_months: { low: 1, high: 1.5 }
+    team_fte: { low: 1, high: 1.5 }
+    person_months: { low: 1, high: 2 }
+    confidence: high
+    risk: low
+    outcomes:
+      - Every control has an owner, test method, and evidence expectation.
+      - Duplicated controls and evidence requests are visible.
+
+  - id: evidence_connectors
+    name: Automated evidence connectors
+    description: Collect repeatable evidence directly from authoritative systems with traceable timestamps.
+    shared: false
+    dependencies: [control_catalog, evidence_store]
+    cost:
+      loaded_labor: { low: 22000, high: 31000 }
+      vendors: { low: 2000, high: 5000 }
+      software_cloud: { low: 2000, high: 5000 }
+      contingency: { low: 3000, high: 4000 }
+    duration_months: { low: 1.5, high: 2.5 }
+    team_fte: { low: 1.5, high: 2.5 }
+    person_months: { low: 3, high: 6 }
+    confidence: medium
+    risk: medium
+    outcomes:
+      - High-volume evidence is collected without repeated manual outreach.
+      - Evidence lineage and collection status are immediately visible.
+
+  - id: continuous_control_testing
+    name: Continuous control testing
+    description: Evaluate machine-testable controls on a schedule and retain the result with its evidence.
+    shared: false
+    dependencies: [evidence_connectors, workflow_approvals]
+    cost:
+      loaded_labor: { low: 26000, high: 36000 }
+      vendors: { low: 1000, high: 4000 }
+      software_cloud: { low: 2000, high: 5000 }
+      contingency: { low: 3000, high: 5000 }
+    duration_months: { low: 2, high: 3 }
+    team_fte: { low: 2, high: 3 }
+    person_months: { low: 4, high: 8 }
+    confidence: medium
+    risk: medium
+    outcomes:
+      - Control failures are detected between formal audit cycles.
+      - Testing evidence is produced consistently and retained automatically.
+
+  - id: exception_workflows
+    name: Control exception workflows
+    description: Route failed tests through ownership, remediation, approval, and closure with aging visibility.
+    shared: false
+    dependencies: [continuous_control_testing]
+    cost:
+      loaded_labor: { low: 20000, high: 28000 }
+      vendors: { low: 1000, high: 3000 }
+      software_cloud: { low: 2000, high: 4000 }
+      contingency: { low: 2000, high: 3000 }
+    duration_months: { low: 1, high: 2 }
+    team_fte: { low: 1, high: 2 }
+    person_months: { low: 2, high: 4 }
+    confidence: high
+    risk: medium
+    outcomes:
+      - Exceptions have accountable owners and visible due dates.
+      - Leadership can see aging, recurrence, and remediation trends.
+
+  - id: continuous_assurance
+    name: Continuous assurance view
+    description: Present current control posture, evidence freshness, exceptions, and residual risk in one view.
+    shared: false
+    dependencies: [exception_workflows, telemetry_pipeline]
+    cost:
+      loaded_labor: { low: 30000, high: 41000 }
+      vendors: { low: 2000, high: 5000 }
+      software_cloud: { low: 3000, high: 7000 }
+      contingency: { low: 4000, high: 6000 }
+    duration_months: { low: 2, high: 3 }
+    team_fte: { low: 2, high: 3 }
+    person_months: { low: 4, high: 8 }
+    confidence: medium
+    risk: high
+    outcomes:
+      - Current assurance posture replaces point-in-time evidence hunts.
+      - Leadership can prioritize remediation by risk and evidence freshness.
+
+  # Draft packages populated from the returned worksheet and planning assumptions.
+  # Cost fields are zeroed because this version intentionally avoids financial estimates.
+  - id: network_audits
+    name: Network Audits
+    description: Automate daily network reviews to identify current provisioning patterns, configuration quality issues, HEO alerts, and the highest-priority opportunities for further automation.
+    shared: false
+    dependencies: []
+    cost:
+      loaded_labor: { low: 0, high: 0 }
+      vendors: { low: 0, high: 0 }
+      software_cloud: { low: 0, high: 0 }
+      contingency: { low: 0, high: 0 }
+    duration_months: { low: 1, high: 2 }
+    team_fte: { low: 1, high: 2 }
+    person_months: { low: 1, high: 4 }
+    confidence: high
+    risk: low
+    outcomes:
+      - Fewer network configuration mistakes.
+      - Better individual quality KPIs.
+      - A clear, evidence-based order for automation priorities.
+
+  - id: workflow_replacement_tools
+    name: Tools for Workflow Replacement
+    description: Replace thousands of manual copy-and-paste actions across design, build, Stage One, and Stage Two with a comprehensive workflow used across network teams.
+    shared: false
+    dependencies: [network_audits]
+    cost:
+      loaded_labor: { low: 0, high: 0 }
+      vendors: { low: 0, high: 0 }
+      software_cloud: { low: 0, high: 0 }
+      contingency: { low: 0, high: 0 }
+    duration_months: { low: 1, high: 6 }
+    team_fte: { low: 1, high: 4 }
+    person_months: { low: 1, high: 24 }
+    confidence: medium
+    risk: medium
+    outcomes:
+      - Large reduction in training time.
+      - Large reduction in hours required per circuit delivery.
+      - A simpler and more satisfying employee workflow.
+
+  - id: automated_circuit_delivery
+    name: Automated Circuit Delivery
+    description: Automate standard circuit delivery from approved design through provisioning, validation, and handoff, while routing nonstandard conditions to a controlled human exception process.
+    shared: false
+    dependencies: [workflow_replacement_tools]
+    cost:
+      loaded_labor: { low: 0, high: 0 }
+      vendors: { low: 0, high: 0 }
+      software_cloud: { low: 0, high: 0 }
+      contingency: { low: 0, high: 0 }
+    duration_months: { low: 2, high: 4 }
+    team_fte: { low: 2, high: 4 }
+    person_months: { low: 4, high: 16 }
+    confidence: medium
+    risk: high
+    outcomes:
+      - Most standard circuits move through service delivery with minimal manual intervention.
+      - Automated validation catches configuration issues before customer handoff.
+
+  - id: reporting_foundation_placeholder
+    name: Unified Data
+    description: Create a governed operational data layer that combines activation, quality, workload, and network data using consistent definitions, ownership, and validation rules.
+    shared: false
+    dependencies: []
+    cost:
+      loaded_labor: { low: 0, high: 0 }
+      vendors: { low: 0, high: 0 }
+      software_cloud: { low: 0, high: 0 }
+      contingency: { low: 0, high: 0 }
+    duration_months: { low: 2, high: 4 }
+    team_fte: { low: 1, high: 2 }
+    person_months: { low: 2, high: 8 }
+    confidence: medium
+    risk: medium
+    outcomes:
+      - Leaders and teams use the same definitions for core operational KPIs.
+      - Recurring reports no longer depend on manual spreadsheet reconciliation.
+
+  - id: reporting_scale_placeholder
+    name: Self-service Reporting
+    description: Deliver governed dashboards and drill-down views that let leaders and operators answer common performance questions without waiting for a custom report.
+    shared: false
+    dependencies: [reporting_foundation_placeholder]
+    cost:
+      loaded_labor: { low: 0, high: 0 }
+      vendors: { low: 0, high: 0 }
+      software_cloud: { low: 0, high: 0 }
+      contingency: { low: 0, high: 0 }
+    duration_months: { low: 2, high: 4 }
+    team_fte: { low: 1, high: 3 }
+    person_months: { low: 2, high: 12 }
+    confidence: medium
+    risk: medium
+    outcomes:
+      - Routine reporting requests are answered immediately from certified dashboards.
+      - Teams can move from an executive KPI to the responsible workflow, team, or circuit.
+
+  - id: reporting_full_placeholder
+    name: Predictive Insights
+    description: Use historical and current operational data to forecast workload, identify likely activation delays, and surface emerging capacity or quality risks before targets are missed.
+    shared: false
+    dependencies: [reporting_scale_placeholder]
+    cost:
+      loaded_labor: { low: 0, high: 0 }
+      vendors: { low: 0, high: 0 }
+      software_cloud: { low: 0, high: 0 }
+      contingency: { low: 0, high: 0 }
+    duration_months: { low: 2, high: 4 }
+    team_fte: { low: 2, high: 4 }
+    person_months: { low: 4, high: 16 }
+    confidence: low
+    risk: high
+    outcomes:
+      - Leaders receive early warning of likely capacity, quality, and delivery constraints.
+      - Planning decisions use measured drivers and forecast ranges instead of backward-looking totals alone.
+
+  - id: audit_foundation_placeholder
+    name: Control Mapping
+    description: Build a control catalog that maps priority requirements to systems, evidence sources, accountable owners, review frequency, and known coverage gaps.
+    shared: false
+    dependencies: []
+    cost:
+      loaded_labor: { low: 0, high: 0 }
+      vendors: { low: 0, high: 0 }
+      software_cloud: { low: 0, high: 0 }
+      contingency: { low: 0, high: 0 }
+    duration_months: { low: 2, high: 4 }
+    team_fte: { low: 1, high: 2 }
+    person_months: { low: 2, high: 8 }
+    confidence: medium
+    risk: medium
+    outcomes:
+      - Priority controls have clear ownership and traceable evidence requirements.
+      - Control gaps and duplicate evidence requests are visible before an audit begins.
+
+  - id: audit_scale_placeholder
+    name: Continuous Evidence
+    description: Connect priority systems to automatically collect, timestamp, retain, and route control evidence with source lineage and exception ownership.
+    shared: false
+    dependencies: [audit_foundation_placeholder]
+    cost:
+      loaded_labor: { low: 0, high: 0 }
+      vendors: { low: 0, high: 0 }
+      software_cloud: { low: 0, high: 0 }
+      contingency: { low: 0, high: 0 }
+    duration_months: { low: 2, high: 4 }
+    team_fte: { low: 1, high: 3 }
+    person_months: { low: 2, high: 12 }
+    confidence: medium
+    risk: medium
+    outcomes:
+      - Evidence is available throughout the year instead of assembled during an audit request.
+      - Missing or stale evidence is routed to an owner before it becomes an audit delay.
+
+  - id: audit_full_placeholder
+    name: Continuous Assurance
+    description: Continuously test automatable controls, prioritize exceptions by business risk, and produce source-linked assurance packages for management and auditors.
+    shared: false
+    dependencies: [audit_scale_placeholder]
+    cost:
+      loaded_labor: { low: 0, high: 0 }
+      vendors: { low: 0, high: 0 }
+      software_cloud: { low: 0, high: 0 }
+      contingency: { low: 0, high: 0 }
+    duration_months: { low: 2, high: 4 }
+    team_fte: { low: 2, high: 4 }
+    person_months: { low: 4, high: 16 }
+    confidence: medium
+    risk: high
+    outcomes:
+      - Control failures are identified and assigned closer to the time they occur.
+      - Audit preparation shifts from evidence gathering to reviewing exceptions and remediation.
+
+roadmaps:
+  - id: network_automation
+    name: Network Automation
+    short_name: Network
+    summary: Reduce activation overhead, failure rates, activation time, and repetitive work through increasingly automated circuit delivery.
+    accent: emerald
+    icon: network
+    stages:
+      - id: foundation
+        label: Foundation
+        name: Network Audits
+        summary: Automate network auditing to understand current provisioning patterns and identify recurring quality issues.
+        work_packages: [network_audits]
+        deliverables:
+          - A live dashboard displaying circuit issues, KPIs, and audit results.
+          - Consistent network configurations resulting in less activation time and less Day 2 involvement.
+          - Alerts for configurations that may cause HEOs, including duplicate IPs and circuits outside the routing instance.
+        kpis:
+          - label: Network review
+            target: Comprehensive automated review and auditing
+            context: Current baseline is no review or a Day-2 review.
+          - label: Individual quality review
+            target: Full quality review
+            context: Current baseline is task-based measurement without a quality review.
+        impact: { efficiency: 2, risk_reduction: 4, decision_visibility: 5, scalability: 5 }
+        risks:
+          - Blind reliance on data outputs could disrupt current day-to-day procedures.
+          - Incomplete source data or false positives could create misleading quality conclusions without a review process.
+      - id: scale
+        label: Scale
+        name: Tools for Workflow Replacement
+        summary: Remove manual provisioning work from circuit delivery with a comprehensive workflow used across network teams.
+        work_packages: [workflow_replacement_tools]
+        deliverables:
+          - Comprehensive tool used by all network teams.
+          - Reporting on value gained.
+          - No reduction in activation success or quality.
+        kpis:
+          - label: Hours spent per activation
+            target: 30-50% reduction for workflows moved into the tool
+            context: Establish the current hours-per-activation baseline during workflow discovery.
+          - label: Manual handoffs per activation
+            target: 50-70% reduction for standard circuits
+            context: Count copy-and-paste steps and system handoffs in the current design-to-activation process.
+        impact: { efficiency: 5, risk_reduction: 4, decision_visibility: 4, scalability: 5 }
+        risks:
+          - Required database and system APIs may not be available or supported on the expected timeline.
+          - Workflow variations across teams could drive scope growth and slow adoption of a common process.
+      - id: full
+        label: Full Vision
+        name: Closed-loop Operations
+        summary: Automate standard circuit delivery from approved design through validation, with people focused on approvals and exceptions.
+        work_packages: [automated_circuit_delivery]
+        deliverables:
+          - End-to-end automation for the highest-volume standard circuit types.
+          - Policy-based approvals and exception routing for nonstandard requests.
+          - Automated prechecks, post-activation validation, status updates, and rollback guidance.
+        kpis:
+          - label: Automated delivery coverage
+            target: 70-85% of standard circuit activations
+            context: Coverage excludes bespoke designs and conditions that require engineering judgment.
+          - label: Activation lead time
+            target: 50-70% reduction for automated circuit types
+            context: Maintain or improve the current activation success and quality rate.
+        impact: { efficiency: 5, risk_reduction: 4, decision_visibility: 5, scalability: 5 }
+        risks:
+          - A defective automation rule could repeat an error across many circuits before detection.
+          - Vendor differences, legacy platforms, and uncommon circuit designs may limit achievable automation coverage.
+
+  - id: reporting
+    name: Reporting
+    short_name: Reporting
+    summary: Create a trusted view of operational performance so leaders and teams can answer questions quickly, consistently, and with less manual preparation.
+    accent: blue
+    icon: reporting
+    stages:
+      - id: foundation
+        label: Foundation
+        name: Unified Data
+        summary: Establish common KPI definitions and automated data feeds for activation, quality, workload, and network performance.
+        work_packages: [reporting_foundation_placeholder]
+        deliverables:
+          - A prioritized source inventory and an owner-approved operational metric dictionary.
+          - Automated data feeds and a governed model for activation, quality, workload, and network measures.
+          - A certified executive dataset with freshness, completeness, and reconciliation checks.
+        kpis:
+          - label: Data freshness
+            target: Daily refresh for core KPIs; near-real-time where source systems support it
+            context: Current reporting is assumed to use a mix of manual extracts and inconsistent refresh schedules.
+          - label: Governed KPI coverage
+            target: 100% of executive KPIs have an approved definition, owner, and source
+            context: Begin with the measures used in recurring operating and executive reviews.
+        impact: { efficiency: 3, risk_reduction: 3, decision_visibility: 5, scalability: 4 }
+        risks:
+          - Source-system access, data quality, or undocumented fields may delay reliable feeds.
+          - Teams may disagree on metric definitions or ownership, preventing a single trusted view.
+      - id: scale
+        label: Scale
+        name: Self-service Reporting
+        summary: Give leaders and operators governed dashboards and drill-downs for common questions without relying on custom report requests.
+        work_packages: [reporting_scale_placeholder]
+        deliverables:
+          - Role-based dashboards for executives, service-delivery leaders, and operating teams.
+          - Drill-down paths from portfolio KPIs to the responsible workflow, team, or circuit.
+          - Scheduled subscriptions and threshold alerts for recurring performance reviews.
+        kpis:
+          - label: Report preparation effort
+            target: 60-80% reduction for recurring operating reports
+            context: Measure analyst and manager time spent extracting, reconciling, formatting, and validating reports.
+          - label: Common-question turnaround
+            target: Immediate for certified dashboard questions; within one business day for new analysis
+            context: Track frequently repeated requests separately from genuinely new analytical work.
+        impact: { efficiency: 4, risk_reduction: 3, decision_visibility: 5, scalability: 4 }
+        risks:
+          - Users may misinterpret self-service data without clear definitions, context, and access controls.
+          - Unmanaged dashboard growth could recreate conflicting reports and increase support effort.
+      - id: full
+        label: Full Vision
+        name: Predictive Insights
+        summary: Forecast workload and surface likely delivery, quality, or capacity issues early enough for leaders to act.
+        work_packages: [reporting_full_placeholder]
+        deliverables:
+          - Workload and capacity forecasts with documented confidence ranges.
+          - Risk scoring for likely activation delays, quality issues, and missed operating targets.
+          - Driver analysis and early-warning alerts linked back to the underlying operational data.
+        kpis:
+          - label: Forecast accuracy
+            target: 80-90% within the agreed planning horizon
+            context: Final accuracy and horizon depend on historical data volume, consistency, and seasonality.
+          - label: Operational early warning
+            target: Identify material capacity or SLA risk 2-4 weeks before impact
+            context: Validate alerts against actual outcomes and tune thresholds to control false positives.
+        impact: { efficiency: 4, risk_reduction: 4, decision_visibility: 5, scalability: 5 }
+        risks:
+          - Limited or inconsistent historical data may not support reliable forecasting for every workflow.
+          - Model drift, false confidence, or unexplained predictions could lead leaders to make poor planning decisions.
+
+  - id: audit_automation
+    name: Audit Automation
+    short_name: Audit
+    summary: Reduce evidence-gathering effort and control blind spots by making ownership, evidence, testing, and exceptions continuously visible.
+    accent: amber
+    icon: audit
+    stages:
+      - id: foundation
+        label: Foundation
+        name: Control Mapping
+        summary: Map priority controls to accountable owners, systems, required evidence, review frequency, and known gaps.
+        work_packages: [audit_foundation_placeholder]
+        deliverables:
+          - A prioritized control catalog with clear business and technical ownership.
+          - Mappings from each priority control to its systems, evidence, frequency, and retention requirement.
+          - A visible gap register with remediation owners and target dates.
+        kpis:
+          - label: Priority control coverage
+            target: 90-100% mapped to an owner, system, and evidence source
+            context: Prioritize controls with repeated evidence requests, known findings, or material business risk.
+          - label: Evidence ownership
+            target: 100% of mapped controls have a primary and backup evidence owner
+            context: Ownership includes responsibility for resolving missing, stale, or rejected evidence.
+        impact: { efficiency: 3, risk_reduction: 4, decision_visibility: 4, scalability: 4 }
+        risks:
+          - Outdated process documentation may produce incomplete mappings or miss informal control activities.
+          - Control owners, auditors, and system teams may interpret evidence requirements differently.
+      - id: scale
+        label: Scale
+        name: Continuous Evidence
+        summary: Automatically collect and retain source-linked evidence, then route missing or stale items to accountable owners.
+        work_packages: [audit_scale_placeholder]
+        deliverables:
+          - Automated evidence connectors for the highest-priority systems and controls.
+          - A governed evidence repository with timestamps, source lineage, access controls, and retention rules.
+          - Exception workflows with ownership, due dates, escalation, and remediation status.
+        kpis:
+          - label: Evidence collection effort
+            target: 50-70% reduction for connected priority controls
+            context: Compare annual hours spent requesting, locating, validating, and packaging evidence.
+          - label: Evidence freshness
+            target: 80-90% of priority evidence available within its required collection window
+            context: Exclude controls that cannot be automated until the source system or process changes.
+        impact: { efficiency: 5, risk_reduction: 4, decision_visibility: 4, scalability: 5 }
+        risks:
+          - Security approvals, API limits, and inconsistent source-system retention may block automated collection.
+          - Missing context or failed connectors could create false confidence that evidence is complete.
+      - id: full
+        label: Full Vision
+        name: Continuous Assurance
+        summary: Continuously test automatable controls and prioritize exceptions so remediation begins before the next audit cycle.
+        work_packages: [audit_full_placeholder]
+        deliverables:
+          - Automated tests for high-value controls with documented logic and human review points.
+          - A control-health view that prioritizes exceptions by severity, duration, and business impact.
+          - Automated escalation and source-linked assurance packages for management and auditors.
+        kpis:
+          - label: Continuous control coverage
+            target: 70-85% of controls determined to be technically automatable
+            context: Coverage should expand only after test logic and evidence quality are validated with control owners.
+          - label: Audit cycle effort
+            target: 30-50% reduction in preparation and evidence follow-up time
+            context: Preserve auditor review and management judgment while reducing repetitive collection and reconciliation.
+        impact: { efficiency: 5, risk_reduction: 5, decision_visibility: 5, scalability: 5 }
+        risks:
+          - Incorrect control logic or overreliance on automated tests could allow a material issue to go unchallenged.
+          - Alert volume may exceed remediation capacity unless severity thresholds and ownership are actively managed.
+
+assumptions:
+  - Network Automation Stops 1 and 2 use supplied draft inputs; all other content is a best-guess planning draft.
+  - KPI targets are directional ranges and require current-state baselines before they become commitments.
+  - Time, staffing, confidence, and risk ranges are illustrative until reviewed by delivery owners and subject-matter experts.
+  - Source-system access, supported APIs, security approval, and available subject-matter experts are assumed.
+  - Parallel mode assumes dependency-ready work can start without a shared capacity ceiling.
+  - Each selected stop includes the work from every prior stop on the same path.
