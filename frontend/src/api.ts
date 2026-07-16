@@ -36,7 +36,9 @@ function scenarioKey(
 function loadStaticBundle(): Promise<StaticPortfolioBundle> {
   if (!staticBundlePromise) {
     const dataUrl = `${import.meta.env.BASE_URL}data/portfolio.json`;
-    staticBundlePromise = fetch(dataUrl).then(responseJson<StaticPortfolioBundle>);
+    staticBundlePromise = fetch(dataUrl, { cache: "no-store" }).then(
+      responseJson<StaticPortfolioBundle>
+    );
   }
   return staticBundlePromise;
 }
