@@ -2800,26 +2800,6 @@ main.screen-metrics {
   font-weight: 450;
 }
 
-.metrics-privacy-note {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 20px;
-  padding-top: 14px;
-  border-top: 1px solid var(--line);
-  color: var(--muted);
-  font-size: 0.8rem;
-}
-
-.metrics-privacy-note svg {
-  flex: 0 0 auto;
-  color: #376b4d;
-}
-
-.metrics-privacy-note strong {
-  color: var(--ink);
-}
-
 @media (max-width: 1420px) {
   .summary-band {
     grid-template-columns: repeat(3, minmax(0, 1fr));
