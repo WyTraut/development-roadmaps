@@ -12,9 +12,8 @@ import type { MetricsEvidence, MetricsSnapshot } from "./types";
 
 
 const wholeNumber = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
-const capacityNumber = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
-const minutesPerWorkday = 8 * 60;
-const workdaysPerWeek = 5;
+const projectionOrderTarget = 800;
+const projectionSteps = 8;
 
 function formatHours(minutes: number): string {
   const hours = Math.round(minutes / 60);
@@ -108,7 +107,11 @@ function MetricsSourceSection({
         </div>
       </section>
 
-      <CapacityReturned minutes={snapshot.estimated_minutes_saved} sourceId={snapshot.id} />
+      <ProjectedSavings
+        minutes={snapshot.estimated_minutes_saved}
+        orders={snapshot.total_scrubs}
+        sourceId={snapshot.id}
+      />
     </article>
   );
 }
@@ -133,72 +136,51 @@ function EvidenceMetric({
   );
 }
 
-function CapacityReturned({ minutes, sourceId }: { minutes: number; sourceId: string }) {
-  const totalWorkdays = Math.max(0, minutes) / minutesPerWorkday;
-  let workweeks = Math.floor(totalWorkdays / workdaysPerWeek);
-  let workdays = Math.round((totalWorkdays - workweeks * workdaysPerWeek) * 10) / 10;
-
-  if (workdays >= workdaysPerWeek) {
-    workweeks += 1;
-    workdays = 0;
-  }
-
-  const showWorkweeks = workweeks > 0;
-  const showWorkdays = workdays > 0 || !showWorkweeks;
-  const dayTileCount = Math.max(1, Math.ceil(workdays));
-  const accessibleUnits = [
-    showWorkweeks ? formatCapacityUnit(workweeks, "workweek") : null,
-    showWorkdays ? formatCapacityUnit(workdays, "day") : null
-  ].filter(Boolean).join(" and ");
-  const headingId = `metrics-capacity-${sourceId}`;
+function ProjectedSavings({
+  minutes,
+  orders,
+  sourceId
+}: {
+  minutes: number;
+  orders: number;
+  sourceId: string;
+}) {
+  const projectedMinutes = orders > 0
+    ? (Math.max(0, minutes) / orders) * projectionOrderTarget
+    : 0;
+  const headingId = `metrics-projection-${sourceId}`;
+  const projectedTime = formatHours(projectedMinutes);
 
   return (
-    <section className="metrics-capacity-section" aria-labelledby={headingId}>
-      <div className="metrics-capacity-heading">
-        <h2 id={headingId}>Capacity returned</h2>
-        <span>8-hour days</span>
+    <section className="metrics-projection-section" aria-labelledby={headingId}>
+      <div className="metrics-projection-heading">
+        <h2 id={headingId}>Projected time saved</h2>
       </div>
       <div
-        className="metrics-capacity-graphic"
+        className="metrics-projection-graphic"
         role="img"
-        aria-label={`Equivalent capacity returned: ${accessibleUnits}`}
+        aria-label={`Projected time saved at ${wholeNumber.format(projectionOrderTarget)} orders: ${projectedTime}`}
       >
-        {showWorkweeks ? (
-          <div className="metrics-capacity-unit">
-            <span className="metrics-workweek-mark" aria-hidden="true">
-              {Array.from({ length: workdaysPerWeek }, (_, index) => (
-                <span key={index} />
-              ))}
-            </span>
-            <strong>{formatCapacityUnit(workweeks, "workweek")}</strong>
+        <div className="metrics-projection-value">
+          <strong>{projectedTime}</strong>
+          <span>saved</span>
+        </div>
+        <div className="metrics-projection-plot" aria-hidden="true">
+          <div className="metrics-projection-bars">
+            {Array.from({ length: projectionSteps }, (_, index) => (
+              <span
+                key={index}
+                style={{ height: `${((index + 1) / projectionSteps) * 100}%` }}
+              />
+            ))}
           </div>
-        ) : null}
-
-        {showWorkweeks && showWorkdays ? (
-          <span className="metrics-capacity-plus" aria-hidden="true">+</span>
-        ) : null}
-
-        {showWorkdays ? (
-          <div className="metrics-capacity-unit">
-            <span className="metrics-workday-mark" aria-hidden="true">
-              {Array.from({ length: dayTileCount }, (_, index) => {
-                const fill = Math.max(0, Math.min(1, workdays - index));
-                return (
-                  <span className="metrics-workday-tile" key={index}>
-                    <span style={{ width: `${fill * 100}%` }} />
-                  </span>
-                );
-              })}
-            </span>
-            <strong>{formatCapacityUnit(workdays, "day")}</strong>
+          <div className="metrics-projection-axis">
+            <span>100</span>
+            <span>400</span>
+            <span>800 orders</span>
           </div>
-        ) : null}
+        </div>
       </div>
     </section>
   );
-}
-
-function formatCapacityUnit(value: number, unit: "workweek" | "day"): string {
-  const label = value === 1 ? unit : `${unit}s`;
-  return `${capacityNumber.format(value)} ${label}`;
 }
