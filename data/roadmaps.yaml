@@ -22,6 +22,7 @@ metrics_sources:
     issue_number: 1
     display_mode: aggregate
     requires_auth: true
+    minutes_saved_per_warehouse_query: 2
     purpose: Adoption and value evidence from real-world scrubber usage, independent of roadmap scenario selections.
 
 impact_dimensions:

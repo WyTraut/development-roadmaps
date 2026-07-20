@@ -117,6 +117,7 @@ class MetricsSource(BaseModel):
     issue_number: int = Field(ge=1)
     display_mode: MetricsDisplayMode = "aggregate"
     requires_auth: bool = True
+    minutes_saved_per_warehouse_query: int = Field(default=0, ge=0)
     purpose: str
 
 
@@ -215,6 +216,7 @@ class MetricsSnapshot(BaseModel):
     last_aggregated: str
     total_scrubs: int = Field(ge=0)
     warehouse_lookups: int = Field(ge=0)
+    minutes_saved_per_warehouse_query: int = Field(ge=0)
     estimated_minutes_saved: int = Field(ge=0)
     tracked_clients: int = Field(ge=0)
     daily_totals: List[MetricsDailyTotal]

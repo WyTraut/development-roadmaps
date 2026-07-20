@@ -57,7 +57,8 @@ def test_metrics_issue_parser_normalizes_aggregate_sections() -> None:
 
     assert snapshot.total_scrubs == 163
     assert snapshot.warehouse_lookups == 49
-    assert snapshot.estimated_minutes_saved == 3258
+    assert snapshot.minutes_saved_per_warehouse_query == 2
+    assert snapshot.estimated_minutes_saved == 3356
     assert snapshot.tracked_clients == 8
     assert snapshot.last_aggregated == "2026-07-20T15:21:28Z"
     assert snapshot.daily_totals[0].date == "2026-07-17"

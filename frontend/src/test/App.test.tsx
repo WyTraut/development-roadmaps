@@ -341,7 +341,7 @@ describe("App", () => {
 
     expect(screen.getByRole("heading", { name: "Metrics" })).toBeVisible();
     expect(screen.getByRole("button", { name: "Metrics" })).toHaveAttribute("aria-current", "page");
-    expect(screen.getByText("No metrics snapshots available")).toBeVisible();
+    expect(screen.getByText("No metrics available.")).toBeVisible();
   });
 
   it("transitions the selected roadmap before opening its editor", async () => {
