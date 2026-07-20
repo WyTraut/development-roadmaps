@@ -14,8 +14,10 @@ import {
   Share2,
   Truck,
   UsersRound,
+  X,
   type LucideIcon
 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 import type { MetricsEvidence, MetricsSnapshot } from "./types";
 
@@ -126,7 +128,7 @@ function MetricsSourceSection({
         </div>
       </section>
 
-      <SystemAggregation />
+      <SystemAggregation sourceId={snapshot.id} />
 
       <ProjectedSavings
         minutes={snapshot.estimated_minutes_saved}
@@ -157,7 +159,38 @@ function EvidenceMetric({
   );
 }
 
-function SystemAggregation() {
+function SystemAggregation({ sourceId }: { sourceId: string }) {
+  const [explanationOpen, setExplanationOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const headingId = `metrics-explanation-${sourceId}`;
+  const copyId = `${headingId}-copy`;
+
+  function closeExplanation() {
+    setExplanationOpen(false);
+    triggerRef.current?.focus();
+  }
+
+  useEffect(() => {
+    if (!explanationOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    closeRef.current?.focus();
+    const handleEscape = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeExplanation();
+      }
+    };
+
+    window.addEventListener("keydown", handleEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [explanationOpen]);
+
   return (
     <section
       className="metrics-aggregation-section"
@@ -165,7 +198,7 @@ function SystemAggregation() {
     >
       <div
         className="metrics-aggregation-graphic"
-        role="img"
+        role="group"
         aria-label="Slider, Warehouse, UPS, FortiGate, SharePoint, Power Apps, OneDrive, and FlightDeck aggregate into L2L Scrubber"
       >
         <div className="metrics-system-grid">
@@ -184,12 +217,70 @@ function SystemAggregation() {
         </span>
 
         <div className="metrics-aggregation-target">
-          <span className="metrics-aggregation-target-icon" aria-hidden="true">
-            <Layers3 size={25} />
-          </span>
+          <button
+            ref={triggerRef}
+            className="metrics-aggregation-target-icon"
+            type="button"
+            aria-label="How L2L Scrubber works"
+            title="How L2L Scrubber works"
+            onClick={() => setExplanationOpen(true)}
+          >
+            <Layers3 aria-hidden="true" size={25} />
+          </button>
           <strong>L2L Scrubber</strong>
         </div>
       </div>
+
+      {explanationOpen ? (
+        <div className="metrics-explanation-layer">
+          <div
+            className="metrics-explanation-backdrop"
+            data-testid="metrics-explanation-backdrop"
+            aria-hidden="true"
+            onClick={closeExplanation}
+          />
+          <section
+            className="metrics-explanation-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={headingId}
+            aria-describedby={copyId}
+          >
+            <header className="metrics-explanation-header">
+              <span className="metrics-explanation-header-icon" aria-hidden="true">
+                <Layers3 size={21} />
+              </span>
+              <h2 id={headingId}>How L2L Scrubber works</h2>
+              <button
+                ref={closeRef}
+                className="metrics-explanation-close"
+                type="button"
+                aria-label="Close explanation"
+                title="Close"
+                onClick={closeExplanation}
+              >
+                <X aria-hidden="true" size={20} />
+              </button>
+            </header>
+            <div className="metrics-explanation-copy" id={copyId}>
+              <p>
+                L2L Scrubber starts with a task ID from Slider or FlightDeck. It uses that ID to
+                open the matching invite and reads the order number, location, and scheduled date.
+              </p>
+              <p>
+                It uses those details to find the matching sales intake PDF and supporting files
+                in SharePoint and OneDrive. It checks the related Warehouse and Power Apps record,
+                adds UPS delivery status when available, and finds the matching FortiGate files.
+              </p>
+              <p>
+                The app compares the order ID, location, schedule, equipment, shipping, and device
+                details across those sources. Matching information is brought together in one
+                review package for a person to confirm.
+              </p>
+            </div>
+          </section>
+        </div>
+      ) : null}
     </section>
   );
 }

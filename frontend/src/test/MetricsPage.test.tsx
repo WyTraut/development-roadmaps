@@ -1,4 +1,5 @@
 import { cleanup, render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 
 import MetricsPage from "../MetricsPage";
@@ -49,7 +50,7 @@ describe("MetricsPage", () => {
     expect(screen.getByRole("heading", { name: "Projected time saved" })).toBeVisible();
     expect(screen.getByText("275 hours")).toBeVisible();
     expect(screen.getByText("800 orders")).toBeVisible();
-    const aggregation = screen.getByRole("img", {
+    const aggregation = screen.getByRole("group", {
       name: "Slider, Warehouse, UPS, FortiGate, SharePoint, Power Apps, OneDrive, and FlightDeck aggregate into L2L Scrubber"
     });
     expect(aggregation).toBeVisible();
@@ -76,6 +77,57 @@ describe("MetricsPage", () => {
       evidence.sources[0].source_url
     );
     expect(screen.queryByText("Aggregate data only")).not.toBeInTheDocument();
+  });
+
+  it("explains the L2L Scrubber workflow and restores focus after every close path", async () => {
+    const user = userEvent.setup();
+    render(<MetricsPage evidence={evidence} />);
+
+    const trigger = screen.getByRole("button", { name: "How L2L Scrubber works" });
+    expect(trigger).toHaveAttribute("title", "How L2L Scrubber works");
+
+    await user.click(trigger);
+    const dialog = screen.getByRole("dialog", { name: "How L2L Scrubber works" });
+    const closeButton = within(dialog).getByRole("button", { name: "Close explanation" });
+
+    expect(closeButton).toHaveFocus();
+    expect(dialog).toHaveTextContent(
+      "L2L Scrubber starts with a task ID from Slider or FlightDeck. It uses that ID to open the matching invite and reads the order number, location, and scheduled date."
+    );
+    expect(dialog).toHaveTextContent(
+      "It uses those details to find the matching sales intake PDF and supporting files in SharePoint and OneDrive. It checks the related Warehouse and Power Apps record, adds UPS delivery status when available, and finds the matching FortiGate files."
+    );
+    expect(dialog).toHaveTextContent(
+      "The app compares the order ID, location, schedule, equipment, shipping, and device details across those sources. Matching information is brought together in one review package for a person to confirm."
+    );
+    for (const system of [
+      "Slider",
+      "FlightDeck",
+      "SharePoint",
+      "OneDrive",
+      "Warehouse",
+      "Power Apps",
+      "UPS",
+      "FortiGate"
+    ]) {
+      expect(dialog).toHaveTextContent(system);
+    }
+    expect(dialog).not.toHaveTextContent(/\b(?:API|REST|CDP)\b/);
+    expect(dialog).not.toHaveTextContent(/\b[A-Z]{2,}-\d+\b/);
+
+    await user.click(closeButton);
+    expect(screen.queryByRole("dialog", { name: "How L2L Scrubber works" })).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+
+    await user.click(trigger);
+    await user.click(screen.getByTestId("metrics-explanation-backdrop"));
+    expect(screen.queryByRole("dialog", { name: "How L2L Scrubber works" })).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+
+    await user.click(trigger);
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog", { name: "How L2L Scrubber works" })).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
   });
 
   it("projects the observed average across 800 orders", () => {
