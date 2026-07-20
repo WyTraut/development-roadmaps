@@ -27,10 +27,16 @@ const evidence: MetricsEvidence = {
   ]
 };
 
+function evidenceWithMinutes(minutes: number): MetricsEvidence {
+  return {
+    sources: [{ ...evidence.sources[0], estimated_minutes_saved: minutes }]
+  };
+}
+
 describe("MetricsPage", () => {
   afterEach(cleanup);
 
-  it("renders aggregate measures, the daily trend, and source attribution", () => {
+  it("renders aggregate measures, returned capacity, and source attribution", () => {
     render(<MetricsPage evidence={evidence} />);
 
     expect(screen.getByRole("heading", { name: "L2L Scrubber impact" })).toBeVisible();
@@ -38,16 +44,43 @@ describe("MetricsPage", () => {
     expect(within(summary).getByText("163")).toBeVisible();
     expect(within(summary).getByText("49")).toBeVisible();
     expect(within(summary).getByText("Warehouse queries")).toBeVisible();
-    expect(within(summary).getByText("2 min saved each")).toBeVisible();
     expect(within(summary).getByText("56 hours")).toBeVisible();
     expect(within(summary).getByText("8")).toBeVisible();
-    expect(
-      screen.getByRole("img", { name: "Daily scrubs for L2L Scrubber" })
-    ).toBeVisible();
+    expect(screen.getByText("1 workweek")).toBeVisible();
+    expect(screen.getByText("2 days")).toBeVisible();
+    expect(screen.getByText("8-hour days")).toBeVisible();
+    expect(screen.queryByText("2 min saved each")).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Daily scrubs" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "View source metrics for L2L Scrubber" })).toHaveAttribute(
       "href",
       evidence.sources[0].source_url
     );
     expect(screen.getByText("Aggregate data only")).toBeVisible();
+  });
+
+  it("renders an exact workweek without a day remainder", () => {
+    render(<MetricsPage evidence={evidenceWithMinutes(2400)} />);
+
+    expect(
+      screen.getByRole("img", { name: "Equivalent capacity returned: 1 workweek" })
+    ).toBeVisible();
+    expect(screen.queryByText("0 days")).not.toBeInTheDocument();
+  });
+
+  it("renders fractional days below one workweek", () => {
+    render(<MetricsPage evidence={evidenceWithMinutes(720)} />);
+
+    expect(
+      screen.getByRole("img", { name: "Equivalent capacity returned: 1.5 days" })
+    ).toBeVisible();
+    expect(screen.queryByText(/workweeks?$/)).not.toBeInTheDocument();
+  });
+
+  it("renders zero returned capacity as zero days", () => {
+    render(<MetricsPage evidence={evidenceWithMinutes(0)} />);
+
+    expect(
+      screen.getByRole("img", { name: "Equivalent capacity returned: 0 days" })
+    ).toBeVisible();
   });
 });

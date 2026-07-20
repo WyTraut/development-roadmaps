@@ -8,12 +8,14 @@ import {
   UsersRound,
   type LucideIcon
 } from "lucide-react";
-import type { CSSProperties } from "react";
 
 import type { MetricsEvidence, MetricsSnapshot } from "./types";
 
 
 const wholeNumber = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+const capacityNumber = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
+const minutesPerWorkday = 8 * 60;
+const workdaysPerWeek = 5;
 
 function formatHours(minutes: number): string {
   const hours = Math.round(minutes / 60);
@@ -27,15 +29,6 @@ function formatDatePart(timestamp: string): string {
     month: "short",
     day: "numeric",
     year: "numeric"
-  }).format(date);
-}
-
-function formatDailyDate(value: string): string {
-  const date = new Date(`${value}T00:00:00Z`);
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    timeZone: "UTC"
   }).format(date);
 }
 
@@ -64,9 +57,6 @@ function MetricsSourceSection({
   snapshot: MetricsSnapshot;
   primary: boolean;
 }) {
-  const maxScrubs = Math.max(1, ...snapshot.daily_totals.map((item) => item.scrubs));
-  const chartWidth = Math.max(620, snapshot.daily_totals.length * 28);
-  const warehouseMinutes = snapshot.minutes_saved_per_warehouse_query ?? 0;
   const headingId = `metrics-source-${snapshot.id}`;
   const heading = `${snapshot.name} impact`;
 
@@ -110,9 +100,6 @@ function MetricsSourceSection({
             icon={Database}
             label="Warehouse queries"
             value={wholeNumber.format(snapshot.warehouse_lookups)}
-            detail={
-              warehouseMinutes > 0 ? `${warehouseMinutes} min saved each` : undefined
-            }
           />
           <EvidenceMetric
             icon={UsersRound}
@@ -122,46 +109,7 @@ function MetricsSourceSection({
         </div>
       </section>
 
-      <section className="metrics-trend-section" aria-labelledby={`metrics-trend-${snapshot.id}`}>
-        <div className="metrics-trend-heading">
-          <h2 id={`metrics-trend-${snapshot.id}`}>Daily scrubs</h2>
-          <span>{snapshot.daily_totals.length} days</span>
-        </div>
-
-        {snapshot.daily_totals.length > 0 ? (
-          <div className="metrics-chart-scroll">
-            <div
-              className="metrics-chart"
-              role="img"
-              aria-label={`Daily scrubs for ${snapshot.name}`}
-              style={{ "--metrics-chart-width": `${chartWidth}px` } as CSSProperties}
-            >
-              {snapshot.daily_totals.map((item, index) => {
-                const showDate =
-                  index === 0 || index === snapshot.daily_totals.length - 1 || index % 5 === 0;
-                const dailyLabel = `${formatDailyDate(item.date)}: ${wholeNumber.format(
-                  item.scrubs
-                )} ${item.scrubs === 1 ? "scrub" : "scrubs"}`;
-                return (
-                  <div className="metrics-chart-column" key={item.date} title={dailyLabel}>
-                    <span className="metrics-chart-track" aria-hidden="true">
-                      <span
-                        className="metrics-chart-bar"
-                        style={{ height: `${Math.max(4, (item.scrubs / maxScrubs) * 100)}%` }}
-                      />
-                    </span>
-                    <time className={showDate ? undefined : "is-hidden"} dateTime={item.date}>
-                      {formatDailyDate(item.date)}
-                    </time>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        ) : (
-          <p className="metrics-trend-empty">No daily activity.</p>
-        )}
-      </section>
+      <CapacityReturned minutes={snapshot.estimated_minutes_saved} sourceId={snapshot.id} />
 
       <footer
         className="metrics-privacy-note"
@@ -178,13 +126,11 @@ function MetricsSourceSection({
 function EvidenceMetric({
   icon: Icon,
   label,
-  value,
-  detail
+  value
 }: {
   icon: LucideIcon;
   label: string;
   value: string;
-  detail?: string;
 }) {
   return (
     <div className="metrics-summary-card">
@@ -193,7 +139,76 @@ function EvidenceMetric({
       </span>
       <span className="metrics-summary-label">{label}</span>
       <strong>{value}</strong>
-      {detail ? <span className="metrics-summary-detail">{detail}</span> : null}
     </div>
   );
+}
+
+function CapacityReturned({ minutes, sourceId }: { minutes: number; sourceId: string }) {
+  const totalWorkdays = Math.max(0, minutes) / minutesPerWorkday;
+  let workweeks = Math.floor(totalWorkdays / workdaysPerWeek);
+  let workdays = Math.round((totalWorkdays - workweeks * workdaysPerWeek) * 10) / 10;
+
+  if (workdays >= workdaysPerWeek) {
+    workweeks += 1;
+    workdays = 0;
+  }
+
+  const showWorkweeks = workweeks > 0;
+  const showWorkdays = workdays > 0 || !showWorkweeks;
+  const dayTileCount = Math.max(1, Math.ceil(workdays));
+  const accessibleUnits = [
+    showWorkweeks ? formatCapacityUnit(workweeks, "workweek") : null,
+    showWorkdays ? formatCapacityUnit(workdays, "day") : null
+  ].filter(Boolean).join(" and ");
+  const headingId = `metrics-capacity-${sourceId}`;
+
+  return (
+    <section className="metrics-capacity-section" aria-labelledby={headingId}>
+      <div className="metrics-capacity-heading">
+        <h2 id={headingId}>Capacity returned</h2>
+        <span>8-hour days</span>
+      </div>
+      <div
+        className="metrics-capacity-graphic"
+        role="img"
+        aria-label={`Equivalent capacity returned: ${accessibleUnits}`}
+      >
+        {showWorkweeks ? (
+          <div className="metrics-capacity-unit">
+            <span className="metrics-workweek-mark" aria-hidden="true">
+              {Array.from({ length: workdaysPerWeek }, (_, index) => (
+                <span key={index} />
+              ))}
+            </span>
+            <strong>{formatCapacityUnit(workweeks, "workweek")}</strong>
+          </div>
+        ) : null}
+
+        {showWorkweeks && showWorkdays ? (
+          <span className="metrics-capacity-plus" aria-hidden="true">+</span>
+        ) : null}
+
+        {showWorkdays ? (
+          <div className="metrics-capacity-unit">
+            <span className="metrics-workday-mark" aria-hidden="true">
+              {Array.from({ length: dayTileCount }, (_, index) => {
+                const fill = Math.max(0, Math.min(1, workdays - index));
+                return (
+                  <span className="metrics-workday-tile" key={index}>
+                    <span style={{ width: `${fill * 100}%` }} />
+                  </span>
+                );
+              })}
+            </span>
+            <strong>{formatCapacityUnit(workdays, "day")}</strong>
+          </div>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
+function formatCapacityUnit(value: number, unit: "workweek" | "day"): string {
+  const label = value === 1 ? unit : `${unit}s`;
+  return `${capacityNumber.format(value)} ${label}`;
 }

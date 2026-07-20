@@ -2723,18 +2723,14 @@ main.screen-metrics {
   line-height: 1.08;
 }
 
-.metrics-summary-detail {
-  grid-column: 1 / -1;
-  margin-top: 5px;
-  color: var(--subtle);
-  font-size: 0.78rem;
-}
-
-.metrics-trend-section {
+.metrics-capacity-section {
   margin-top: 34px;
+  padding: 24px 0 26px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
 }
 
-.metrics-trend-heading {
+.metrics-capacity-heading {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2743,75 +2739,65 @@ main.screen-metrics {
   font-size: 0.82rem;
 }
 
-.metrics-trend-heading h2 {
+.metrics-capacity-heading h2 {
   margin: 0;
   color: var(--ink);
   font-size: 1.05rem;
 }
 
-.metrics-chart-scroll {
-  margin-top: 16px;
-  overflow-x: auto;
-  overscroll-behavior-inline: contain;
-  scrollbar-color: var(--line-strong) transparent;
+.metrics-capacity-graphic {
+  display: flex;
+  min-height: 130px;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 14px;
+  padding: 22px 28px;
+  background: #f7f8f8;
 }
 
-.metrics-chart {
+.metrics-capacity-unit {
   display: grid;
-  width: max(100%, var(--metrics-chart-width));
-  height: 184px;
-  grid-auto-columns: minmax(24px, 1fr);
+  justify-items: center;
+  gap: 11px;
+}
+
+.metrics-capacity-unit > strong {
+  color: var(--ink);
+  font-size: 1rem;
+}
+
+.metrics-workweek-mark,
+.metrics-workday-mark {
+  display: grid;
+  height: 42px;
+  grid-auto-columns: 34px;
   grid-auto-flow: column;
   gap: 6px;
-  padding: 0 4px 7px;
-  border-bottom: 1px solid var(--line-strong);
 }
 
-.metrics-chart-column {
-  display: grid;
-  min-width: 0;
-  height: 100%;
-  grid-template-rows: minmax(0, 1fr) 24px;
-  align-items: end;
-  gap: 4px;
-  text-align: center;
+.metrics-workweek-mark > span,
+.metrics-workday-tile {
+  overflow: hidden;
+  border: 1px solid #8faaa4;
+  border-radius: 4px;
+  background: var(--surface);
 }
 
-.metrics-chart-track {
-  display: flex;
-  width: 100%;
-  height: 100%;
-  align-items: flex-end;
-  justify-content: center;
-  border-bottom: 1px solid #d8dcdf;
-  background: #fafbfc;
-}
-
-.metrics-chart-bar {
-  display: block;
-  width: min(26px, 78%);
-  min-height: 4px;
-  border-radius: 3px 3px 0 0;
+.metrics-workweek-mark > span {
   background: #16786c;
 }
 
-.metrics-chart-column time {
-  align-self: center;
+.metrics-workday-tile > span {
+  display: block;
+  height: 100%;
+  background: #16786c;
+}
+
+.metrics-capacity-plus {
   color: var(--subtle);
-  font-size: 0.72rem;
-  white-space: nowrap;
-}
-
-.metrics-chart-column time.is-hidden {
-  visibility: hidden;
-}
-
-.metrics-trend-empty {
-  margin-top: 22px;
-  padding: 22px 0;
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-  color: var(--muted);
+  font-size: 1.8rem;
+  font-weight: 450;
 }
 
 .metrics-privacy-note {
@@ -3091,6 +3077,35 @@ main.screen-metrics {
 
   .metrics-summary-card:last-child {
     grid-column: 1 / -1;
+  }
+
+  .metrics-capacity-section {
+    padding: 20px 0 22px;
+  }
+
+  .metrics-capacity-graphic {
+    min-height: 114px;
+    gap: 8px;
+    padding: 18px 4px;
+  }
+
+  .metrics-workweek-mark,
+  .metrics-workday-mark {
+    height: 36px;
+    grid-auto-columns: 22px;
+    gap: 3px;
+  }
+
+  .metrics-capacity-unit {
+    gap: 9px;
+  }
+
+  .metrics-capacity-unit > strong {
+    font-size: 0.9rem;
+  }
+
+  .metrics-capacity-plus {
+    font-size: 1.4rem;
   }
 
   .brand-mark {
