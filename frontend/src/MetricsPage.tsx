@@ -1,9 +1,14 @@
 import {
+  ArrowRight,
   BarChart3,
+  CalendarDays,
   Clock3,
   Database,
   ExternalLink,
+  FileText,
+  Layers3,
   ScanText,
+  Truck,
   UsersRound,
   type LucideIcon
 } from "lucide-react";
@@ -14,6 +19,12 @@ import type { MetricsEvidence, MetricsSnapshot } from "./types";
 const wholeNumber = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 const projectionOrderTarget = 800;
 const projectionSteps = 8;
+const aggregationSystems: Array<{ name: string; detail: string; icon: LucideIcon }> = [
+  { name: "Slider", detail: "Scheduling", icon: CalendarDays },
+  { name: "Warehouse", detail: "Orders", icon: Database },
+  { name: "UPS", detail: "Tracking", icon: Truck },
+  { name: "FortiGate", detail: "PDFs + configs", icon: FileText }
+];
 
 function formatHours(minutes: number): string {
   const hours = Math.round(minutes / 60);
@@ -107,6 +118,8 @@ function MetricsSourceSection({
         </div>
       </section>
 
+      <SystemAggregation sourceId={snapshot.id} />
+
       <ProjectedSavings
         minutes={snapshot.estimated_minutes_saved}
         orders={snapshot.total_scrubs}
@@ -133,6 +146,49 @@ function EvidenceMetric({
       <span className="metrics-summary-label">{label}</span>
       <strong>{value}</strong>
     </div>
+  );
+}
+
+function SystemAggregation({ sourceId }: { sourceId: string }) {
+  const headingId = `metrics-aggregation-${sourceId}`;
+
+  return (
+    <section className="metrics-aggregation-section" aria-labelledby={headingId}>
+      <div className="metrics-aggregation-heading">
+        <h2 id={headingId}>Four systems. One view.</h2>
+      </div>
+      <div
+        className="metrics-aggregation-graphic"
+        role="img"
+        aria-label="Slider, Warehouse, UPS, and FortiGate aggregate into L2L Scrubber"
+      >
+        <div className="metrics-system-grid">
+          {aggregationSystems.map(({ name, detail, icon: Icon }) => (
+            <div className="metrics-system-node" key={name}>
+              <span className="metrics-system-icon" aria-hidden="true">
+                <Icon size={20} />
+              </span>
+              <span>
+                <strong>{name}</strong>
+                <small>{detail}</small>
+              </span>
+            </div>
+          ))}
+        </div>
+
+        <span className="metrics-aggregation-connector" aria-hidden="true">
+          <ArrowRight size={30} />
+        </span>
+
+        <div className="metrics-aggregation-target">
+          <span className="metrics-aggregation-target-icon" aria-hidden="true">
+            <Layers3 size={25} />
+          </span>
+          <strong>L2L Scrubber</strong>
+          <span>Unified order view</span>
+        </div>
+      </div>
+    </section>
   );
 }
 
