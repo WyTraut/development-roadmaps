@@ -49,13 +49,18 @@ describe("MetricsPage", () => {
     expect(screen.getByRole("heading", { name: "Projected time saved" })).toBeVisible();
     expect(screen.getByText("275 hours")).toBeVisible();
     expect(screen.getByText("800 orders")).toBeVisible();
-    expect(screen.getByRole("heading", { name: "Four systems. One view." })).toBeVisible();
+    const aggregation = screen.getByRole("img", {
+      name: "Slider, Warehouse, UPS, and FortiGate aggregate into L2L Scrubber"
+    });
+    expect(aggregation).toBeVisible();
+    expect(within(aggregation).getByText("Slider")).toBeVisible();
+    expect(within(aggregation).getByText("Warehouse")).toBeVisible();
+    expect(within(aggregation).getByText("UPS")).toBeVisible();
+    expect(within(aggregation).getByText("FortiGate")).toBeVisible();
+    expect(screen.queryByText("Four systems. One view.")).not.toBeInTheDocument();
     expect(
-      screen.getByRole("img", {
-        name: "Slider, Warehouse, UPS, and FortiGate aggregate into L2L Scrubber"
-      })
-    ).toBeVisible();
-    expect(screen.getByText("Unified order view")).toBeVisible();
+      within(aggregation).queryByText(/Scheduling|Orders|Tracking|PDFs \+ configs|Unified order view/)
+    ).not.toBeInTheDocument();
     expect(
       screen.getByRole("img", { name: "Projected time saved at 800 orders: 275 hours" })
     ).toBeVisible();
