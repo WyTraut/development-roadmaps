@@ -1,13 +1,17 @@
 import {
+  AppWindow,
   ArrowRight,
   BarChart3,
   CalendarDays,
   Clock3,
+  Cloud,
   Database,
   ExternalLink,
   FileText,
   Layers3,
+  Plane,
   ScanText,
+  Share2,
   Truck,
   UsersRound,
   type LucideIcon
@@ -23,7 +27,11 @@ const aggregationSystems: Array<{ name: string; icon: LucideIcon }> = [
   { name: "Slider", icon: CalendarDays },
   { name: "Warehouse", icon: Database },
   { name: "UPS", icon: Truck },
-  { name: "FortiGate", icon: FileText }
+  { name: "FortiGate", icon: FileText },
+  { name: "SharePoint", icon: Share2 },
+  { name: "Power Apps", icon: AppWindow },
+  { name: "OneDrive", icon: Cloud },
+  { name: "FlightDeck", icon: Plane }
 ];
 
 function formatHours(minutes: number): string {
@@ -158,7 +166,7 @@ function SystemAggregation() {
       <div
         className="metrics-aggregation-graphic"
         role="img"
-        aria-label="Slider, Warehouse, UPS, and FortiGate aggregate into L2L Scrubber"
+        aria-label="Slider, Warehouse, UPS, FortiGate, SharePoint, Power Apps, OneDrive, and FlightDeck aggregate into L2L Scrubber"
       >
         <div className="metrics-system-grid">
           {aggregationSystems.map(({ name, icon: Icon }) => (

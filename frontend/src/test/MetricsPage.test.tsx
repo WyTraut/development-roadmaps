@@ -50,13 +50,17 @@ describe("MetricsPage", () => {
     expect(screen.getByText("275 hours")).toBeVisible();
     expect(screen.getByText("800 orders")).toBeVisible();
     const aggregation = screen.getByRole("img", {
-      name: "Slider, Warehouse, UPS, and FortiGate aggregate into L2L Scrubber"
+      name: "Slider, Warehouse, UPS, FortiGate, SharePoint, Power Apps, OneDrive, and FlightDeck aggregate into L2L Scrubber"
     });
     expect(aggregation).toBeVisible();
     expect(within(aggregation).getByText("Slider")).toBeVisible();
     expect(within(aggregation).getByText("Warehouse")).toBeVisible();
     expect(within(aggregation).getByText("UPS")).toBeVisible();
     expect(within(aggregation).getByText("FortiGate")).toBeVisible();
+    expect(within(aggregation).getByText("SharePoint")).toBeVisible();
+    expect(within(aggregation).getByText("Power Apps")).toBeVisible();
+    expect(within(aggregation).getByText("OneDrive")).toBeVisible();
+    expect(within(aggregation).getByText("FlightDeck")).toBeVisible();
     expect(screen.queryByText("Four systems. One view.")).not.toBeInTheDocument();
     expect(
       within(aggregation).queryByText(/Scheduling|Orders|Tracking|PDFs \+ configs|Unified order view/)
