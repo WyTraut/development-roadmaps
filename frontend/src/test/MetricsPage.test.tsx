@@ -55,7 +55,7 @@ describe("MetricsPage", () => {
       "href",
       evidence.sources[0].source_url
     );
-    expect(screen.getByText("Aggregate data only")).toBeVisible();
+    expect(screen.queryByText("Aggregate data only")).not.toBeInTheDocument();
   });
 
   it("renders an exact workweek without a day remainder", () => {

@@ -4,7 +4,6 @@ import {
   Database,
   ExternalLink,
   ScanText,
-  ShieldCheck,
   UsersRound,
   type LucideIcon
 } from "lucide-react";
@@ -110,15 +109,6 @@ function MetricsSourceSection({
       </section>
 
       <CapacityReturned minutes={snapshot.estimated_minutes_saved} sourceId={snapshot.id} />
-
-      <footer
-        className="metrics-privacy-note"
-        aria-label={`Aggregate data only. ${snapshot.privacy_note}`}
-        title={snapshot.privacy_note}
-      >
-        <ShieldCheck aria-hidden="true" size={22} />
-        <strong>Aggregate data only</strong>
-      </footer>
     </article>
   );
 }
