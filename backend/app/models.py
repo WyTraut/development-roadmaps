@@ -9,6 +9,8 @@ StageSelection = Literal["none", "foundation", "scale", "full"]
 ExecutionMode = Literal["parallel", "sequential"]
 Confidence = Literal["low", "medium", "high"]
 RiskLevel = Literal["low", "medium", "high"]
+MetricsDisplayMode = Literal["aggregate"]
+MetricsSourceType = Literal["github_issue"]
 
 
 class NumericRange(BaseModel):
@@ -107,6 +109,17 @@ class PortfolioDefaults(BaseModel):
     execution_mode: ExecutionMode = "parallel"
 
 
+class MetricsSource(BaseModel):
+    id: str = Field(pattern=r"^[a-z][a-z0-9_]*$")
+    name: str
+    source_type: MetricsSourceType = "github_issue"
+    repository: str = Field(pattern=r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
+    issue_number: int = Field(ge=1)
+    display_mode: MetricsDisplayMode = "aggregate"
+    requires_auth: bool = True
+    purpose: str
+
+
 class PortfolioConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -115,6 +128,7 @@ class PortfolioConfig(BaseModel):
     impact_dimensions: List[ImpactDimension]
     work_packages: List[WorkPackage]
     roadmaps: List[Roadmap]
+    metrics_sources: List[MetricsSource] = Field(default_factory=list)
     assumptions: List[str] = Field(min_length=1)
 
     @model_validator(mode="after")
@@ -126,6 +140,9 @@ class PortfolioConfig(BaseModel):
             raise ValueError("work package IDs must be unique")
         if len(roadmap_ids) != len(set(roadmap_ids)):
             raise ValueError("roadmap IDs must be unique")
+        metrics_source_ids = [source.id for source in self.metrics_sources]
+        if len(metrics_source_ids) != len(set(metrics_source_ids)):
+            raise ValueError("metrics source IDs must be unique")
         if len(self.roadmaps) != 3:
             raise ValueError("the portfolio must contain exactly three roadmaps")
 
@@ -183,6 +200,29 @@ class DataStatus(BaseModel):
     stale: bool
     warning: str | None = None
     loaded_at: str
+
+
+class MetricsDailyTotal(BaseModel):
+    date: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}$")
+    scrubs: int = Field(ge=0)
+
+
+class MetricsSnapshot(BaseModel):
+    id: str
+    name: str
+    source_url: str
+    purpose: str
+    last_aggregated: str
+    total_scrubs: int = Field(ge=0)
+    warehouse_lookups: int = Field(ge=0)
+    estimated_minutes_saved: int = Field(ge=0)
+    tracked_clients: int = Field(ge=0)
+    daily_totals: List[MetricsDailyTotal]
+    privacy_note: str
+
+
+class MetricsEvidence(BaseModel):
+    sources: List[MetricsSnapshot] = Field(default_factory=list)
 
 
 class PortfolioResponse(BaseModel):

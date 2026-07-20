@@ -72,6 +72,17 @@ export interface ImpactDimension {
   description: string;
 }
 
+export interface MetricsSource {
+  id: string;
+  name: string;
+  source_type: "github_issue";
+  repository: string;
+  issue_number: number;
+  display_mode: "aggregate";
+  requires_auth: boolean;
+  purpose: string;
+}
+
 export interface PortfolioConfig {
   portfolio: {
     title: string;
@@ -89,6 +100,7 @@ export interface PortfolioConfig {
   impact_dimensions: ImpactDimension[];
   work_packages: WorkPackage[];
   roadmaps: Roadmap[];
+  metrics_sources?: MetricsSource[];
   assumptions: string[];
 }
 
@@ -101,6 +113,29 @@ export interface DataStatus {
 export interface PortfolioResponse {
   config: PortfolioConfig;
   data_status: DataStatus;
+}
+
+export interface MetricsDailyTotal {
+  date: string;
+  scrubs: number;
+}
+
+export interface MetricsSnapshot {
+  id: string;
+  name: string;
+  source_url: string;
+  purpose: string;
+  last_aggregated: string;
+  total_scrubs: number;
+  warehouse_lookups: number;
+  estimated_minutes_saved: number;
+  tracked_clients: number;
+  daily_totals: MetricsDailyTotal[];
+  privacy_note: string;
+}
+
+export interface MetricsEvidence {
+  sources: MetricsSnapshot[];
 }
 
 export interface ScheduleItem {

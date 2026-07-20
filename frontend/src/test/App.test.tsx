@@ -320,6 +320,7 @@ describe("App", () => {
     render(<App />);
 
     await screen.findByRole("heading", { name: "Development Path" });
+    expect(screen.getByRole("button", { name: "Metrics" })).toBeVisible();
     await user.click(screen.getByRole("button", { name: "Portfolio" }));
 
     expect(screen.getByLabelText("Selected portfolio summary")).toBeVisible();
@@ -329,6 +330,18 @@ describe("App", () => {
 
     expect(screen.getByRole("heading", { name: "Development Path" })).toBeVisible();
     expect(screen.getByRole("button", { name: "Paths" })).toHaveAttribute("aria-current", "page");
+  });
+
+  it("opens the metrics evidence page with a local empty state", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await screen.findByRole("heading", { name: "Development Path" });
+    await user.click(screen.getByRole("button", { name: "Metrics" }));
+
+    expect(screen.getByRole("heading", { name: "Metrics" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Metrics" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByText("No metrics snapshots available")).toBeVisible();
   });
 
   it("transitions the selected roadmap before opening its editor", async () => {

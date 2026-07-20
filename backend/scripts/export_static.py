@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from itertools import product
 from pathlib import Path
@@ -21,6 +22,11 @@ from backend.app.models import (  # noqa: E402
     PortfolioResponse,
     ScenarioRequest,
 )
+from backend.app.metrics import (  # noqa: E402
+    IssueBodyLoader,
+    build_metrics_evidence,
+    fetch_github_issue_body,
+)
 
 
 STAGE_SELECTIONS = ("none", "foundation", "scale", "full")
@@ -35,13 +41,22 @@ def scenario_key(selections: dict[str, str], execution_mode: str) -> str:
     return f"{execution_mode}|{selection_key}"
 
 
-def build_static_bundle(data_path: Path) -> dict[str, Any]:
+def build_static_bundle(
+    data_path: Path,
+    github_token: str | None = None,
+    issue_body_loader: IssueBodyLoader = fetch_github_issue_body,
+) -> dict[str, Any]:
     raw = yaml.safe_load(data_path.read_text(encoding="utf-8"))
     config = PortfolioConfig.model_validate(raw)
     status = DataStatus(
         stale=False,
         warning=None,
         loaded_at=f"{config.portfolio.last_updated}T00:00:00+00:00",
+    )
+    metrics = build_metrics_evidence(
+        config.metrics_sources,
+        github_token=github_token,
+        issue_body_loader=issue_body_loader,
     )
     calculator = PortfolioCalculator(config)
     roadmap_ids = [roadmap.id for roadmap in config.roadmaps]
@@ -61,6 +76,7 @@ def build_static_bundle(data_path: Path) -> dict[str, Any]:
     return {
         "portfolio": portfolio.model_dump(mode="json"),
         "scenarios": scenarios,
+        "metrics": metrics.model_dump(mode="json"),
     }
 
 
@@ -82,13 +98,19 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    bundle = build_static_bundle(args.data)
+    bundle = build_static_bundle(
+        args.data,
+        github_token=os.environ.get("METRICS_GITHUB_TOKEN"),
+    )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(
         json.dumps(bundle, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
-    print(f"Exported {len(bundle['scenarios'])} scenarios to {args.output}")
+    print(
+        f"Exported {len(bundle['scenarios'])} scenarios and "
+        f"{len(bundle['metrics']['sources'])} metrics source(s) to {args.output}"
+    )
 
 
 if __name__ == "__main__":

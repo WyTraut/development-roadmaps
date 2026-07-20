@@ -1,6 +1,6 @@
 # Executive Roadmap Portfolio Configurator
 
-A local, stateless planning application for comparing Network Automation, Reporting, and Audit Automation investments. FastAPI owns roadmap validation and calculations; React provides the executive comparison, delivery timeline, stage details, URL sharing, and print/PDF experience.
+A local, stateless planning application for comparing Network Automation, Reporting, and Audit Automation investments. FastAPI owns roadmap validation and calculations; React provides the executive comparison, delivery timeline, aggregate usage evidence, stage details, URL sharing, and print/PDF experience.
 
 The repository also supports a serverless GitHub Pages build. Its deployment workflow validates `data/roadmaps.yaml`, precomputes every scenario with the same Python calculator, and publishes the React application with those results bundled as static data.
 
@@ -55,9 +55,10 @@ pnpm run build
 Generate all 128 combinations of roadmap depth and delivery mode, then build with a repository base path:
 
 ```bash
+export METRICS_GITHUB_TOKEN="replace-with-fine-grained-token"
 .venv/bin/python backend/scripts/export_static.py
 cd frontend
 VITE_STATIC_SITE=true VITE_BASE_PATH=/development-roadmaps/ pnpm run build
 ```
 
-The workflow in `.github/workflows/deploy-pages.yml` runs these steps automatically on pushes to `main`. The generated scenario bundle is intentionally excluded from Git because it is recreated from the validated YAML during every deployment.
+The workflow in `.github/workflows/deploy-pages.yml` runs these steps automatically on pushes to `main`. Add a repository Actions secret named `METRICS_GITHUB_TOKEN` with read access to each configured private metrics source. The generated bundle is intentionally excluded from Git because its scenarios and aggregate metrics snapshots are recreated during every deployment; the token itself is never included in the bundle.

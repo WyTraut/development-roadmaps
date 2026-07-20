@@ -40,8 +40,9 @@ import {
 } from "react";
 import { flushSync } from "react-dom";
 
-import { calculateScenario, fetchPortfolio } from "./api";
+import { calculateScenario, fetchMetrics, fetchPortfolio } from "./api";
 import { formatNumberRange, sentenceCase } from "./format";
+import MetricsPage from "./MetricsPage";
 import { readUrlState, scenarioSearch, scenarioUrl } from "./urlState";
 import type {
   Accent,
@@ -49,6 +50,7 @@ import type {
   ExecutionMode,
   ImpactDimension,
   ImpactRatings,
+  MetricsEvidence,
   NumericRange,
   PathResult,
   PortfolioConfig,
@@ -60,7 +62,7 @@ import type {
 } from "./types";
 
 type ViewName = "comparison" | "delivery" | "assumptions";
-type AppScreen = "chooser" | "editor" | "portfolio";
+type AppScreen = "chooser" | "editor" | "portfolio" | "metrics";
 
 interface DrawerState {
   roadmap: Roadmap;
@@ -114,6 +116,7 @@ function App() {
   const [selections, setSelections] = useState<Record<string, StageSelection> | null>(null);
   const [executionMode, setExecutionMode] = useState<ExecutionMode>("parallel");
   const [result, setResult] = useState<ScenarioResult | null>(null);
+  const [metrics, setMetrics] = useState<MetricsEvidence>({ sources: [] });
   const [screen, setScreen] = useState<AppScreen>("chooser");
   const [activeRoadmapId, setActiveRoadmapId] = useState<string | null>(null);
   const [zoomingRoadmapId, setZoomingRoadmapId] = useState<string | null>(null);
@@ -135,10 +138,11 @@ function App() {
 
   useEffect(() => {
     const controller = new AbortController();
-    fetchPortfolio(controller.signal)
-      .then((response) => {
+    Promise.all([fetchPortfolio(controller.signal), fetchMetrics()])
+      .then(([response, metricsEvidence]) => {
         const urlState = readUrlState(response.config, window.location.search);
         setConfig(response.config);
+        setMetrics(metricsEvidence);
         setSelections(urlState.selections);
         setExecutionMode(urlState.executionMode);
         setError(null);
@@ -416,6 +420,11 @@ function App() {
     document.documentElement.scrollTop = 0;
   }
 
+  function showMetrics() {
+    setScreen("metrics");
+    document.documentElement.scrollTop = 0;
+  }
+
   async function shareScenario() {
     const url = scenarioUrl(window.location.href, roadmapIds, selections!, executionMode);
     try {
@@ -437,6 +446,7 @@ function App() {
         screen={screen}
         onShowChooser={showChooser}
         onShowPortfolio={showPortfolio}
+        onShowMetrics={showMetrics}
       />
 
       {(currentStatus?.stale || error) && (
@@ -603,6 +613,10 @@ function App() {
             <AssumptionsView config={config} />
           </section>
         </section>
+
+        <section className="metrics-screen" hidden={screen !== "metrics"}>
+          <MetricsPage evidence={metrics} />
+        </section>
       </main>
 
       {drawer && (
@@ -632,13 +646,15 @@ function App() {
 function AppHeader({
   screen,
   onShowChooser,
-  onShowPortfolio
+  onShowPortfolio,
+  onShowMetrics
 }: {
   screen: AppScreen;
   onShowChooser: () => void;
   onShowPortfolio: () => void;
+  onShowMetrics: () => void;
 }) {
-  const pathsAreCurrent = screen !== "portfolio";
+  const pathsAreCurrent = screen === "chooser" || screen === "editor";
 
   return (
     <header className="global-nav" aria-label="Global navigation">
@@ -663,6 +679,14 @@ function AppHeader({
             onClick={onShowPortfolio}
           >
             Portfolio
+          </button>
+          <button
+            type="button"
+            className={screen === "metrics" ? "is-current" : ""}
+            aria-current={screen === "metrics" ? "page" : undefined}
+            onClick={onShowMetrics}
+          >
+            Metrics
           </button>
         </nav>
       </div>
