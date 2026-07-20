@@ -19,11 +19,11 @@ import type { MetricsEvidence, MetricsSnapshot } from "./types";
 const wholeNumber = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 const projectionOrderTarget = 800;
 const projectionSteps = 8;
-const aggregationSystems: Array<{ name: string; detail: string; icon: LucideIcon }> = [
-  { name: "Slider", detail: "Scheduling", icon: CalendarDays },
-  { name: "Warehouse", detail: "Orders", icon: Database },
-  { name: "UPS", detail: "Tracking", icon: Truck },
-  { name: "FortiGate", detail: "PDFs + configs", icon: FileText }
+const aggregationSystems: Array<{ name: string; icon: LucideIcon }> = [
+  { name: "Slider", icon: CalendarDays },
+  { name: "Warehouse", icon: Database },
+  { name: "UPS", icon: Truck },
+  { name: "FortiGate", icon: FileText }
 ];
 
 function formatHours(minutes: number): string {
@@ -118,7 +118,7 @@ function MetricsSourceSection({
         </div>
       </section>
 
-      <SystemAggregation sourceId={snapshot.id} />
+      <SystemAggregation />
 
       <ProjectedSavings
         minutes={snapshot.estimated_minutes_saved}
@@ -149,29 +149,24 @@ function EvidenceMetric({
   );
 }
 
-function SystemAggregation({ sourceId }: { sourceId: string }) {
-  const headingId = `metrics-aggregation-${sourceId}`;
-
+function SystemAggregation() {
   return (
-    <section className="metrics-aggregation-section" aria-labelledby={headingId}>
-      <div className="metrics-aggregation-heading">
-        <h2 id={headingId}>Four systems. One view.</h2>
-      </div>
+    <section
+      className="metrics-aggregation-section"
+      aria-label="Systems aggregated by L2L Scrubber"
+    >
       <div
         className="metrics-aggregation-graphic"
         role="img"
         aria-label="Slider, Warehouse, UPS, and FortiGate aggregate into L2L Scrubber"
       >
         <div className="metrics-system-grid">
-          {aggregationSystems.map(({ name, detail, icon: Icon }) => (
+          {aggregationSystems.map(({ name, icon: Icon }) => (
             <div className="metrics-system-node" key={name}>
               <span className="metrics-system-icon" aria-hidden="true">
                 <Icon size={20} />
               </span>
-              <span>
-                <strong>{name}</strong>
-                <small>{detail}</small>
-              </span>
+              <strong>{name}</strong>
             </div>
           ))}
         </div>
@@ -185,7 +180,6 @@ function SystemAggregation({ sourceId }: { sourceId: string }) {
             <Layers3 size={25} />
           </span>
           <strong>L2L Scrubber</strong>
-          <span>Unified order view</span>
         </div>
       </div>
     </section>
