@@ -49,6 +49,13 @@ describe("MetricsPage", () => {
     expect(screen.getByRole("heading", { name: "Projected time saved" })).toBeVisible();
     expect(screen.getByText("275 hours")).toBeVisible();
     expect(screen.getByText("800 orders")).toBeVisible();
+    expect(screen.getByRole("heading", { name: "Four systems. One view." })).toBeVisible();
+    expect(
+      screen.getByRole("img", {
+        name: "Slider, Warehouse, UPS, and FortiGate aggregate into L2L Scrubber"
+      })
+    ).toBeVisible();
+    expect(screen.getByText("Unified order view")).toBeVisible();
     expect(
       screen.getByRole("img", { name: "Projected time saved at 800 orders: 275 hours" })
     ).toBeVisible();
