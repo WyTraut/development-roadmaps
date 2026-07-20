@@ -1,5 +1,6 @@
 import type {
   ExecutionMode,
+  MetricsEvidence,
   PortfolioResponse,
   ScenarioResult,
   StageSelection
@@ -8,6 +9,7 @@ import type {
 interface StaticPortfolioBundle {
   portfolio: PortfolioResponse;
   scenarios: Record<string, ScenarioResult>;
+  metrics?: MetricsEvidence;
 }
 
 const staticSite = import.meta.env.VITE_STATIC_SITE === "true";
@@ -47,6 +49,12 @@ export async function fetchPortfolio(signal?: AbortSignal): Promise<PortfolioRes
   if (staticSite) return (await loadStaticBundle()).portfolio;
   const response = await fetch("/api/portfolio", { signal });
   return responseJson<PortfolioResponse>(response);
+}
+
+export async function fetchMetrics(): Promise<MetricsEvidence> {
+  if (!staticSite) return { sources: [] };
+  const bundle = await loadStaticBundle();
+  return bundle.metrics ?? { sources: [] };
 }
 
 export async function calculateScenario(

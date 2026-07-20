@@ -14,6 +14,16 @@ defaults:
     audit_automation: none
   execution_mode: parallel
 
+metrics_sources:
+  - id: l2l_scrubber
+    name: L2L Scrubber
+    source_type: github_issue
+    repository: WyattTrautman/L2L-Scrubber
+    issue_number: 1
+    display_mode: aggregate
+    requires_auth: true
+    purpose: Adoption and value evidence from real-world scrubber usage, independent of roadmap scenario selections.
+
 impact_dimensions:
   - key: efficiency
     label: Efficiency

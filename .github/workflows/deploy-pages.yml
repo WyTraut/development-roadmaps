@@ -35,6 +35,8 @@ jobs:
         run: pytest
 
       - name: Export static roadmap scenarios
+        env:
+          METRICS_GITHUB_TOKEN: ${{ secrets.METRICS_GITHUB_TOKEN }}
         run: python backend/scripts/export_static.py
 
       - name: Set up pnpm
