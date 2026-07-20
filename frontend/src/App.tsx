@@ -64,6 +64,8 @@ import type {
 type ViewName = "comparison" | "delivery" | "assumptions";
 type AppScreen = "chooser" | "editor" | "portfolio" | "metrics";
 
+const METRICS_ROUTE_HASH = "#metrics";
+
 interface DrawerState {
   roadmap: Roadmap;
   stage: RoadmapStage;
@@ -117,7 +119,9 @@ function App() {
   const [executionMode, setExecutionMode] = useState<ExecutionMode>("parallel");
   const [result, setResult] = useState<ScenarioResult | null>(null);
   const [metrics, setMetrics] = useState<MetricsEvidence>({ sources: [] });
-  const [screen, setScreen] = useState<AppScreen>("chooser");
+  const [screen, setScreen] = useState<AppScreen>(() =>
+    window.location.hash.toLowerCase() === METRICS_ROUTE_HASH ? "metrics" : "chooser"
+  );
   const [activeRoadmapId, setActiveRoadmapId] = useState<string | null>(null);
   const [zoomingRoadmapId, setZoomingRoadmapId] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<ViewName>("comparison");
@@ -161,7 +165,7 @@ function App() {
     window.history.replaceState(
       null,
       "",
-      `${window.location.pathname}${scenarioSearch(roadmapIds, selections, executionMode)}`
+      `${window.location.pathname}${scenarioSearch(roadmapIds, selections, executionMode)}${window.location.hash}`
     );
     setCalculating(true);
     calculateScenario(selections, executionMode, controller.signal)
@@ -409,6 +413,7 @@ function App() {
     const update = () => {
       setActiveRoadmapId(null);
       setScreen("chooser");
+      updateScreenRoute("");
       document.documentElement.scrollTop = 0;
     };
     if (screen === "editor" && startRoadmapViewTransition(update)) return;
@@ -417,12 +422,22 @@ function App() {
 
   function showPortfolio() {
     setScreen("portfolio");
+    updateScreenRoute("");
     document.documentElement.scrollTop = 0;
   }
 
   function showMetrics() {
     setScreen("metrics");
+    updateScreenRoute(METRICS_ROUTE_HASH);
     document.documentElement.scrollTop = 0;
+  }
+
+  function updateScreenRoute(hash: string) {
+    window.history.replaceState(
+      null,
+      "",
+      `${window.location.pathname}${window.location.search}${hash}`
+    );
   }
 
   async function shareScenario() {

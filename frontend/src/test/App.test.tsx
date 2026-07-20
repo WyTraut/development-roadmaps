@@ -342,6 +342,17 @@ describe("App", () => {
     expect(screen.getByRole("heading", { name: "Metrics" })).toBeVisible();
     expect(screen.getByRole("button", { name: "Metrics" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByText("No metrics available.")).toBeVisible();
+    expect(window.location.hash).toBe("#metrics");
+  });
+
+  it("opens metrics directly from the metrics URL", async () => {
+    window.history.replaceState(null, "", "/#metrics");
+
+    render(<App />);
+
+    expect(await screen.findByRole("heading", { name: "Metrics" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Metrics" })).toHaveAttribute("aria-current", "page");
+    expect(window.location.hash).toBe("#metrics");
   });
 
   it("transitions the selected roadmap before opening its editor", async () => {
