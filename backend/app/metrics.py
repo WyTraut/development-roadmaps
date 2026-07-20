@@ -85,6 +85,16 @@ def parse_metrics_issue(source: MetricsSource, issue_body: str) -> MetricsSnapsh
             )
         estimated_minutes_saved = round(float(hours_match.group(1)) * 60)
 
+    warehouse_queries = _summary_integer(
+        source,
+        summary,
+        "warehouse queries",
+        "warehouse/sre lookups",
+    )
+    estimated_minutes_saved += (
+        warehouse_queries * source.minutes_saved_per_warehouse_query
+    )
+
     return MetricsSnapshot(
         id=source.id,
         name=source.name,
@@ -94,9 +104,8 @@ def parse_metrics_issue(source: MetricsSource, issue_body: str) -> MetricsSnapsh
         purpose=source.purpose,
         last_aggregated=last_aggregated,
         total_scrubs=_summary_integer(source, summary, "total scrubs"),
-        warehouse_lookups=_summary_integer(
-            source, summary, "warehouse/sre lookups"
-        ),
+        warehouse_lookups=warehouse_queries,
+        minutes_saved_per_warehouse_query=source.minutes_saved_per_warehouse_query,
         estimated_minutes_saved=estimated_minutes_saved,
         tracked_clients=_summary_integer(source, summary, "tracked clients"),
         daily_totals=daily_totals,
@@ -165,9 +174,19 @@ def _required_summary(
 
 
 def _summary_integer(
-    source: MetricsSource, values: dict[str, str], label: str
+    source: MetricsSource,
+    values: dict[str, str],
+    label: str,
+    *aliases: str,
 ) -> int:
-    raw = _required_summary(source, values, label)
+    raw = next(
+        (values[candidate] for candidate in (label, *aliases) if candidate in values),
+        None,
+    )
+    if raw is None:
+        raise MetricsExportError(
+            f"Metrics source '{source.id}' is missing summary field '{label}'"
+        )
     match = re.search(r"[0-9][0-9,]*", raw)
     if not match:
         raise MetricsExportError(

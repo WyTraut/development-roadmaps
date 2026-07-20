@@ -80,6 +80,7 @@ export interface MetricsSource {
   issue_number: number;
   display_mode: "aggregate";
   requires_auth: boolean;
+  minutes_saved_per_warehouse_query: number;
   purpose: string;
 }
 
@@ -128,6 +129,7 @@ export interface MetricsSnapshot {
   last_aggregated: string;
   total_scrubs: number;
   warehouse_lookups: number;
+  minutes_saved_per_warehouse_query?: number;
   estimated_minutes_saved: number;
   tracked_clients: number;
   daily_totals: MetricsDailyTotal[];
