@@ -40,7 +40,9 @@ describe("MetricsPage", () => {
   it("renders aggregate measures, projected savings, and source attribution", () => {
     render(<MetricsPage evidence={evidence} />);
 
-    expect(screen.getByRole("heading", { name: "L2L Scrubber impact" })).toBeVisible();
+    expect(screen.getByRole("heading", { name: "Scrub tool" })).toBeVisible();
+    expect(screen.queryByText("Usage to date")).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "L2L Scrubber impact" })).not.toBeInTheDocument();
     const summary = screen.getByLabelText("L2L Scrubber aggregate summary");
     expect(within(summary).getByText("163")).toBeVisible();
     expect(within(summary).getByText("49")).toBeVisible();

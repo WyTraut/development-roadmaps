@@ -77,13 +77,14 @@ function MetricsSourceSection({
   primary: boolean;
 }) {
   const headingId = `metrics-source-${snapshot.id}`;
-  const heading = `${snapshot.name} impact`;
+  const scrubToolSource = snapshot.id === "l2l_scrubber";
+  const heading = scrubToolSource ? "Scrub tool" : `${snapshot.name} impact`;
 
   return (
     <article className="metrics-source-section" aria-labelledby={headingId}>
       <header className="metrics-source-header">
         <div>
-          <span className="section-kicker">Usage to date</span>
+          {scrubToolSource ? null : <span className="section-kicker">Usage to date</span>}
           {primary ? <h1 id={headingId}>{heading}</h1> : <h2 id={headingId}>{heading}</h2>}
         </div>
         <div className="metrics-source-meta">
