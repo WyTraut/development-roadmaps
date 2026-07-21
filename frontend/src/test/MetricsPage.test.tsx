@@ -50,19 +50,30 @@ describe("MetricsPage", () => {
     expect(within(summary).getByText("60 hours")).toBeVisible();
     expect(within(summary).getByText("8")).toBeVisible();
     expect(screen.getByRole("heading", { name: "Projected time saved" })).toBeVisible();
-    expect(screen.getByText("4,775 hours")).toBeVisible();
-    expect(screen.getByText("potential saved")).toBeVisible();
-    expect(screen.getByText("Across five product workflows")).toBeVisible();
-    expect(screen.getByText("L2L")).toBeVisible();
-    expect(screen.getByText("Zero Touches")).toBeVisible();
-    expect(screen.getByText("SD-WAN new installs")).toBeVisible();
-    expect(screen.getByText("FortiGate installs")).toBeVisible();
-    expect(screen.getByText("Plug and Play VPN installs")).toBeVisible();
-    expect(screen.getByText("Current product")).toBeVisible();
-    expect(screen.getByText("+500 hours")).toBeVisible();
-    expect(screen.getAllByText("+1,000 hours")).toHaveLength(2);
-    expect(screen.getByText("+2,000 hours")).toBeVisible();
-    expect(screen.queryByText(/months?/)).not.toBeInTheDocument();
+    expect(screen.getByText("275 hours")).toBeVisible();
+    expect(screen.getByText("in 4.6 months")).toBeVisible();
+    expect(screen.getByText("Current L2L automation")).toBeVisible();
+    expect(screen.getByText("1 month")).toBeVisible();
+    expect(screen.getByText("3 months")).toBeVisible();
+    expect(screen.getByText("4.6 months")).toBeVisible();
+    const productScenarios = screen.getByRole("group", { name: "Product automation scenarios" });
+    expect(within(productScenarios).getByRole("button", { name: "Include through L2L" })).toBeVisible();
+    expect(
+      within(productScenarios).getByRole("button", { name: "Include through Zero Touches" })
+    ).toBeVisible();
+    expect(
+      within(productScenarios).getByRole("button", { name: "Include through SD-WAN new installs" })
+    ).toBeVisible();
+    expect(
+      within(productScenarios).getByRole("button", { name: "Include through FortiGate installs" })
+    ).toBeVisible();
+    expect(
+      within(productScenarios).getByRole("button", { name: "Include through Plug and Play VPN installs" })
+    ).toBeVisible();
+    expect(within(productScenarios).getByText("Current")).toBeVisible();
+    expect(within(productScenarios).getByText("+500h")).toBeVisible();
+    expect(within(productScenarios).getAllByText("+1,000h")).toHaveLength(2);
+    expect(within(productScenarios).getByText("+2,000h")).toBeVisible();
     expect(screen.queryByText("800 orders")).not.toBeInTheDocument();
     const aggregation = screen.getByRole("group", {
       name: "Slider, Warehouse, UPS, FortiGate, SharePoint, Power Apps, OneDrive, and FlightDeck aggregate into Activations Scrub Tool"
@@ -83,7 +94,7 @@ describe("MetricsPage", () => {
     ).not.toBeInTheDocument();
     expect(
       screen.getByRole("img", {
-        name: "Projected time saved through product expansion: 4,775 hours, including L2L, Zero Touches, SD-WAN new installs, FortiGate installs, and Plug and Play VPN installs"
+        name: "Projected time saved: 275 hours in 4.6 months with L2L automation"
       })
     ).toBeVisible();
     expect(screen.queryByText("Capacity returned")).not.toBeInTheDocument();
@@ -171,15 +182,62 @@ describe("MetricsPage", () => {
     expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
   });
 
-  it("updates the product-expansion total from the observed L2L projection", () => {
+  it("adds product savings from left to right on hover and pins a scenario on click", async () => {
+    const user = userEvent.setup();
+    render(<MetricsPage evidence={evidence} />);
+
+    const zeroTouches = screen.getByRole("button", { name: "Include through Zero Touches" });
+    await user.hover(zeroTouches);
+    expect(
+      screen.getByRole("img", {
+        name: "Projected time saved: 775 hours in 4.6 months with L2L and Zero Touches automation"
+      })
+    ).toBeVisible();
+
+    const sdwan = screen.getByRole("button", { name: "Include through SD-WAN new installs" });
+    await user.unhover(zeroTouches);
+    await user.hover(sdwan);
+    expect(screen.getByText("1,775 hours")).toBeVisible();
+
+    const fortigate = screen.getByRole("button", { name: "Include through FortiGate installs" });
+    await user.unhover(sdwan);
+    await user.hover(fortigate);
+    expect(screen.getByText("2,775 hours")).toBeVisible();
+
+    const plugAndPlay = screen.getByRole("button", {
+      name: "Include through Plug and Play VPN installs"
+    });
+    await user.unhover(fortigate);
+    await user.hover(plugAndPlay);
+    expect(screen.getByText("4,775 hours")).toBeVisible();
+
+    await user.click(plugAndPlay);
+    await user.unhover(plugAndPlay);
+    expect(plugAndPlay).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByText("4,775 hours")).toBeVisible();
+
+    await user.click(screen.getByRole("button", { name: "Include through L2L" }));
+    expect(screen.getByText("275 hours")).toBeVisible();
+  });
+
+  it("updates the product-expansion total from the observed L2L projection", async () => {
+    const user = userEvent.setup();
     render(<MetricsPage evidence={evidenceWithProjection(6000, 100)} />);
 
     expect(
       screen.getByRole("img", {
-        name: "Projected time saved through product expansion: 5,300 hours, including L2L, Zero Touches, SD-WAN new installs, FortiGate installs, and Plug and Play VPN installs"
+        name: "Projected time saved: 800 hours in 8 months with L2L automation"
       })
     ).toBeVisible();
-    expect(screen.getByText("Current product")).toBeVisible();
+
+    await user.hover(
+      screen.getByRole("button", { name: "Include through Plug and Play VPN installs" })
+    );
+    expect(
+      screen.getByRole("img", {
+        name: "Projected time saved: 5,300 hours in 8 months with L2L, Zero Touches, SD-WAN new installs, FortiGate installs, and Plug and Play VPN installs automation"
+      })
+    ).toBeVisible();
   });
 
   it("renders a zero projection when there are no observed orders", () => {
@@ -187,7 +245,7 @@ describe("MetricsPage", () => {
 
     expect(
       screen.getByRole("img", {
-        name: "Projected time saved through product expansion: 4,500 hours, including L2L, Zero Touches, SD-WAN new installs, FortiGate installs, and Plug and Play VPN installs"
+        name: "Projected time saved: 0 hours in 0 months with L2L automation"
       })
     ).toBeVisible();
   });

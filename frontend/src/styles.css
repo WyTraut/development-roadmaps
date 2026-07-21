@@ -3045,76 +3045,139 @@ main.screen-metrics {
   font-weight: 620;
 }
 
-.metrics-expansion-plot {
+.metrics-projection-visual,
+.metrics-projection-plot {
   display: grid;
+  gap: 8px;
 }
 
-.metrics-expansion-bars {
+.metrics-projection-bars {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  align-items: end;
-  gap: 12px;
-}
-
-.metrics-expansion-milestone {
-  display: grid;
-  min-width: 0;
-  grid-template-rows: 18px 82px minmax(30px, auto) 16px;
-  gap: 4px;
-  text-align: center;
-}
-
-.metrics-expansion-milestone > strong {
-  color: var(--ink);
-  font-size: 0.78rem;
-  line-height: 1;
-}
-
-.metrics-expansion-bar-track {
-  display: flex;
   height: 82px;
-  align-items: flex-end;
+  align-items: end;
+  gap: 8px;
   border-bottom: 1px solid #aeb9b7;
 }
 
-.metrics-expansion-bar {
-  display: block;
+.metrics-projection-bar-track {
+  display: flex;
+  height: 82px;
+  min-width: 0;
+  align-items: flex-end;
+}
+
+.metrics-projection-bar-stack {
+  display: flex;
   width: 100%;
   min-height: 7px;
+  flex-direction: column-reverse;
+  overflow: hidden;
   border-radius: 3px 3px 0 0;
-  background: #4f7d89;
+  transition: height 180ms ease;
 }
 
-.metrics-expansion-milestone:nth-child(3) .metrics-expansion-bar {
-  background: #63739b;
+.metrics-projection-product-layer {
+  display: block;
+  width: 100%;
+  background: var(--product-color);
+  transition: height 180ms ease;
 }
 
-.metrics-expansion-milestone:nth-child(4) .metrics-expansion-bar {
-  background: #8a7554;
+.product-l2l {
+  --product-color: #174f48;
 }
 
-.metrics-expansion-milestone:nth-child(5) .metrics-expansion-bar {
-  background: #7b5f78;
+.product-zero-touch {
+  --product-color: #4f7d89;
 }
 
-.metrics-expansion-bar.current {
-  background: #174f48;
+.product-sdwan {
+  --product-color: #63739b;
 }
 
-.metrics-expansion-product {
-  align-self: start;
-  overflow-wrap: anywhere;
-  color: var(--muted);
-  font-size: 0.72rem;
-  font-weight: 720;
-  line-height: 1.2;
+.product-fortigate {
+  --product-color: #8a7554;
 }
 
-.metrics-expansion-milestone small {
+.product-plug-and-play {
+  --product-color: #7b5f78;
+}
+
+.metrics-projection-axis {
+  display: flex;
+  justify-content: space-between;
   color: var(--subtle);
-  font-size: 0.66rem;
-  font-weight: 620;
-  white-space: nowrap;
+  font-size: 0.68rem;
+  font-weight: 650;
+}
+
+.metrics-projection-axis.single {
+  justify-content: flex-end;
+}
+
+.metrics-product-selector {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.metrics-product-option {
+  min-width: 0;
+  min-height: 46px;
+  padding: 7px 5px 6px;
+  border: 1px solid #cbd2d1;
+  border-radius: 4px;
+  background: #ffffff;
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  text-align: center;
+  transition: border-color 150ms ease, box-shadow 150ms ease, color 150ms ease;
+}
+
+.metrics-product-option:hover,
+.metrics-product-option.included {
+  border-color: var(--product-color);
+  box-shadow: inset 0 3px 0 var(--product-color);
+  color: var(--ink);
+}
+
+.metrics-product-option.selected {
+  background: #eef5f4;
+}
+
+.metrics-product-option:focus-visible {
+  outline: 2px solid #16786c;
+  outline-offset: 2px;
+}
+
+.metrics-product-option strong,
+.metrics-product-option small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.metrics-product-option strong {
+  color: inherit;
+  font-size: 0.72rem;
+  line-height: 1.15;
+}
+
+.metrics-product-option small {
+  margin-top: 3px;
+  color: var(--subtle);
+  font-size: 0.64rem;
+  font-weight: 650;
+  line-height: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .metrics-projection-bar-stack,
+  .metrics-projection-product-layer,
+  .metrics-product-option {
+    transition: none;
+  }
 }
 
 @media (max-width: 1420px) {
@@ -3447,7 +3510,7 @@ main.screen-metrics {
   .metrics-projection-graphic {
     min-height: 190px;
     grid-template-columns: 1fr;
-    gap: 20px;
+    gap: 16px;
     padding: 22px 20px;
   }
 
@@ -3455,31 +3518,31 @@ main.screen-metrics {
     font-size: 2.6rem;
   }
 
-  .metrics-expansion-bars {
+  .metrics-projection-bars {
+    height: 72px;
     gap: 5px;
   }
 
-  .metrics-expansion-milestone {
-    grid-template-rows: 16px 72px minmax(44px, auto) auto;
-    gap: 3px;
-  }
-
-  .metrics-expansion-milestone > strong {
-    font-size: 0.68rem;
-  }
-
-  .metrics-expansion-bar-track {
+  .metrics-projection-bar-track {
     height: 72px;
   }
 
-  .metrics-expansion-product {
+  .metrics-product-selector {
+    gap: 4px;
+  }
+
+  .metrics-product-option {
+    min-height: 52px;
+    padding: 7px 3px 5px;
+  }
+
+  .metrics-product-option strong {
     font-size: 0.62rem;
   }
 
-  .metrics-expansion-milestone small {
+  .metrics-product-option small {
     font-size: 0.58rem;
     line-height: 1.1;
-    white-space: normal;
   }
 
   .brand-mark {
