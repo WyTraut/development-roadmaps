@@ -78,7 +78,7 @@ function MetricsSourceSection({
 }) {
   const headingId = `metrics-source-${snapshot.id}`;
   const scrubToolSource = snapshot.id === "l2l_scrubber";
-  const heading = scrubToolSource ? "Scrub tool" : `${snapshot.name} impact`;
+  const heading = scrubToolSource ? snapshot.name : `${snapshot.name} impact`;
 
   return (
     <article className="metrics-source-section" aria-labelledby={headingId}>
@@ -129,7 +129,7 @@ function MetricsSourceSection({
         </div>
       </section>
 
-      <SystemAggregation sourceId={snapshot.id} />
+      <SystemAggregation productName={snapshot.name} sourceId={snapshot.id} />
 
       <ProjectedSavings
         minutes={snapshot.estimated_minutes_saved}
@@ -160,7 +160,13 @@ function EvidenceMetric({
   );
 }
 
-function SystemAggregation({ sourceId }: { sourceId: string }) {
+function SystemAggregation({
+  productName,
+  sourceId
+}: {
+  productName: string;
+  sourceId: string;
+}) {
   const [explanationOpen, setExplanationOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -195,12 +201,12 @@ function SystemAggregation({ sourceId }: { sourceId: string }) {
   return (
     <section
       className="metrics-aggregation-section"
-      aria-label="Systems aggregated by L2L Scrubber"
+      aria-label={`Systems aggregated by ${productName}`}
     >
       <div
         className="metrics-aggregation-graphic"
         role="group"
-        aria-label="Slider, Warehouse, UPS, FortiGate, SharePoint, Power Apps, OneDrive, and FlightDeck aggregate into L2L Scrubber"
+        aria-label={`Slider, Warehouse, UPS, FortiGate, SharePoint, Power Apps, OneDrive, and FlightDeck aggregate into ${productName}`}
       >
         <div className="metrics-system-grid">
           {aggregationSystems.map(({ name, icon: Icon }) => (
@@ -222,13 +228,13 @@ function SystemAggregation({ sourceId }: { sourceId: string }) {
             ref={triggerRef}
             className="metrics-aggregation-target-icon"
             type="button"
-            aria-label="How L2L Scrubber works"
-            title="How L2L Scrubber works"
+            aria-label={`How ${productName} works`}
+            title={`How ${productName} works`}
             onClick={() => setExplanationOpen(true)}
           >
             <Layers3 aria-hidden="true" size={25} />
           </button>
-          <strong>L2L Scrubber</strong>
+          <strong>{productName}</strong>
         </div>
       </div>
 
@@ -251,7 +257,7 @@ function SystemAggregation({ sourceId }: { sourceId: string }) {
               <span className="metrics-explanation-header-icon" aria-hidden="true">
                 <Layers3 size={21} />
               </span>
-              <h2 id={headingId}>How L2L Scrubber works</h2>
+              <h2 id={headingId}>How {productName} works</h2>
               <button
                 ref={closeRef}
                 className="metrics-explanation-close"
@@ -265,7 +271,7 @@ function SystemAggregation({ sourceId }: { sourceId: string }) {
             </header>
             <div className="metrics-explanation-copy" id={copyId}>
               <p>
-                L2L Scrubber starts with a task ID from Slider or FlightDeck. It uses that ID to
+                {productName} starts with a task ID from Slider or FlightDeck. It uses that ID to
                 open the matching invite and reads the order number, location, and scheduled date.
               </p>
               <p>

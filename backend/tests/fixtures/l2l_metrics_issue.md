@@ -1,4 +1,4 @@
-# L2L Scrubber Usage Metrics
+# Activations Scrub Tool Usage Metrics
 
 This issue body is maintained automatically from aggregate client metric comments below.
 
