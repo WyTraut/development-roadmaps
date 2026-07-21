@@ -2690,6 +2690,10 @@ main.screen-metrics {
   background: var(--line);
 }
 
+.metrics-summary-grid.with-automation-checks {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .metrics-summary-card {
   display: grid;
   min-width: 0;
@@ -2756,7 +2760,7 @@ main.screen-metrics {
   position: absolute;
   top: calc(100% + 8px);
   z-index: 30;
-  width: min(280px, calc(100vw - 40px));
+  width: min(440px, calc(100vw - 40px));
   padding: 10px 12px;
   border-radius: 5px;
   background: #25302e;
@@ -3000,7 +3004,6 @@ main.screen-metrics {
 .metrics-projection-section {
   margin-top: 24px;
   padding: 18px 0 20px;
-  border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
 }
 
@@ -3458,7 +3461,19 @@ main.screen-metrics {
     justify-content: center;
   }
 
+  .metrics-info-tooltip {
+    width: min(320px, calc(100vw - 48px));
+  }
+
+  .metrics-info-tooltip.align-left {
+    left: -96px;
+  }
+
   .metrics-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .metrics-summary-grid.with-automation-checks {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -3476,8 +3491,17 @@ main.screen-metrics {
     padding: 16px;
   }
 
+  .metrics-summary-card:has(.metrics-info-tooltip) {
+    min-height: 180px;
+    align-content: start;
+  }
+
   .metrics-summary-card:last-child {
     grid-column: 1 / -1;
+  }
+
+  .metrics-summary-grid.with-automation-checks .metrics-summary-card:last-child {
+    grid-column: auto;
   }
 
   .metrics-aggregation-section {

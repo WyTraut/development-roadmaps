@@ -10,6 +10,7 @@ import {
   FileText,
   Info,
   Layers3,
+  ListChecks,
   Plane,
   ScanText,
   Share2,
@@ -141,12 +142,14 @@ function MetricsSourceSection({
           <span>Estimated time saved</span>
           <strong>{formatHours(snapshot.estimated_minutes_saved)}</strong>
         </div>
-        <div className="metrics-summary-grid">
+        <div
+          className={`metrics-summary-grid${scrubToolSource ? " with-automation-checks" : ""}`}
+        >
           <EvidenceMetric
             icon={ScanText}
             label="Scrubs"
             value={wholeNumber.format(snapshot.total_scrubs)}
-            helpText="A process where network technicians gather information and verify logistical and network standards. It is crucial to preventing HEOs and failures while significantly reducing activation times."
+            helpText="A process where network technicians gather information and verify logistical and network standards. Scrubs are crucial to preventing HEOs and failures while significantly reducing activation times."
           />
           <EvidenceMetric
             icon={Database}
@@ -160,6 +163,15 @@ function MetricsSourceSection({
             label="Tracked clients"
             value={wholeNumber.format(snapshot.tracked_clients)}
           />
+          {scrubToolSource ? (
+            <EvidenceMetric
+              icon={ListChecks}
+              label="Checks per scrub"
+              value="28"
+              helpText="Each automated scrub runs 28 checks across IP schemas, routing logic, BGP configuration, shipping, equipment, scheduling, and order details."
+              helpAlign="right"
+            />
+          ) : null}
         </div>
       </section>
 

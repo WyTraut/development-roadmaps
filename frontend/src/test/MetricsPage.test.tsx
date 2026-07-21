@@ -49,6 +49,8 @@ describe("MetricsPage", () => {
     expect(within(summary).getByText("Warehouse queries")).toBeVisible();
     expect(within(summary).getByText("60 hours")).toBeVisible();
     expect(within(summary).getByText("8")).toBeVisible();
+    expect(within(summary).getByText("Checks per scrub")).toBeVisible();
+    expect(within(summary).getByText("28")).toBeVisible();
     expect(screen.getByRole("heading", { name: "Projected time saved" })).toBeVisible();
     expect(screen.getByText("275 hours")).toBeVisible();
     expect(screen.getByText("in 4.6 months")).toBeVisible();
@@ -157,14 +159,14 @@ describe("MetricsPage", () => {
     expect(trigger).toHaveFocus();
   });
 
-  it("explains scrubs and Warehouse queries on hover and keyboard focus", async () => {
+  it("explains KPI definitions on hover and keyboard focus", async () => {
     const user = userEvent.setup();
     render(<MetricsPage evidence={evidence} />);
 
     const scrubsInfo = screen.getByRole("button", { name: "About Scrubs" });
     await user.hover(scrubsInfo);
     expect(screen.getByRole("tooltip")).toHaveTextContent(
-      "A process where network technicians gather information and verify logistical and network standards. It is crucial to preventing HEOs and failures while significantly reducing activation times."
+      "A process where network technicians gather information and verify logistical and network standards. Scrubs are crucial to preventing HEOs and failures while significantly reducing activation times."
     );
     await user.unhover(scrubsInfo);
     expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
@@ -174,6 +176,14 @@ describe("MetricsPage", () => {
     expect(warehouseInfo).toHaveFocus();
     expect(screen.getByRole("tooltip")).toHaveTextContent(
       "The number of times the tool checks Warehouse order records to confirm equipment, location, and activation details."
+    );
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+
+    const checksInfo = screen.getByRole("button", { name: "About Checks per scrub" });
+    await user.click(checksInfo);
+    expect(screen.getByRole("tooltip")).toHaveTextContent(
+      "Each automated scrub runs 28 checks across IP schemas, routing logic, BGP configuration, shipping, equipment, scheduling, and order details."
     );
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
