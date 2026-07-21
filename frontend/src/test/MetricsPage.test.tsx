@@ -187,9 +187,11 @@ describe("MetricsPage", () => {
     await user.hover(zeroTouches);
     expect(
       screen.getByRole("img", {
-        name: "Projected time saved: 775 hours in 4.6 months with L2L and Zero Touches automation. Product contributions: L2L 275 hours and Zero Touches adds 500 hours"
+        name: "Projected time saved with L2L and Zero Touches automation: 775 hours. Product contributions: L2L 275 hours and Zero Touches adds 500 hours"
       })
     ).toBeVisible();
+    expect(screen.queryByText("in 4.6 months")).not.toBeInTheDocument();
+    expect(screen.queryByText("Current L2L automation")).not.toBeInTheDocument();
     expect(screen.queryByText("1 month")).not.toBeInTheDocument();
     expect(screen.queryByText("3 months")).not.toBeInTheDocument();
     expect(screen.queryByText("4.6 months")).not.toBeInTheDocument();
@@ -225,6 +227,8 @@ describe("MetricsPage", () => {
 
     await user.click(screen.getByRole("button", { name: "Include through L2L" }));
     expect(screen.getByText("275 hours")).toBeVisible();
+    expect(screen.getByText("in 4.6 months")).toBeVisible();
+    expect(screen.getByText("Current L2L automation")).toBeVisible();
     expect(screen.getByText("1 month")).toBeVisible();
     expect(screen.getByText("3 months")).toBeVisible();
     expect(screen.getByText("4.6 months")).toBeVisible();
@@ -246,7 +250,7 @@ describe("MetricsPage", () => {
     );
     expect(
       screen.getByRole("img", {
-        name: "Projected time saved: 5,300 hours in 8 months with L2L, Zero Touches, SD-WAN new installs, FortiGate installs, and Plug and Play VPN installs automation. Product contributions: L2L 800 hours, Zero Touches adds 500 hours, SD-WAN new installs adds 1,000 hours, FortiGate installs adds 1,000 hours, and Plug and Play VPN installs adds 2,000 hours"
+        name: "Projected time saved with L2L, Zero Touches, SD-WAN new installs, FortiGate installs, and Plug and Play VPN installs automation: 5,300 hours. Product contributions: L2L 800 hours, Zero Touches adds 500 hours, SD-WAN new installs adds 1,000 hours, FortiGate installs adds 1,000 hours, and Plug and Play VPN installs adds 2,000 hours"
       })
     ).toBeVisible();
   });
