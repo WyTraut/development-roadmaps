@@ -69,6 +69,7 @@ describe("MetricsPage", () => {
     expect(within(aggregation).getByText("Power Apps")).toBeVisible();
     expect(within(aggregation).getByText("OneDrive")).toBeVisible();
     expect(within(aggregation).getByText("FlightDeck")).toBeVisible();
+    expect(screen.getByText("Sources aggregated through automation")).toBeVisible();
     expect(screen.queryByText("Four systems. One view.")).not.toBeInTheDocument();
     expect(
       within(aggregation).queryByText(/Scheduling|Orders|Tracking|PDFs \+ configs|Unified order view/)

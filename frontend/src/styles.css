@@ -2792,6 +2792,13 @@ main.screen-metrics {
   border-bottom: 1px solid var(--line);
 }
 
+.metrics-aggregation-caption {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 720;
+}
+
 .metrics-aggregation-graphic {
   display: grid;
   min-height: 132px;
