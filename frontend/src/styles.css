@@ -3045,40 +3045,76 @@ main.screen-metrics {
   font-weight: 620;
 }
 
-.metrics-projection-plot {
+.metrics-expansion-plot {
   display: grid;
-  gap: 8px;
 }
 
-.metrics-projection-bars {
+.metrics-expansion-bars {
   display: grid;
-  height: 96px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   align-items: end;
-  gap: 8px;
+  gap: 12px;
+}
+
+.metrics-expansion-milestone {
+  display: grid;
+  min-width: 0;
+  grid-template-rows: 18px 82px minmax(30px, auto) 16px;
+  gap: 4px;
+  text-align: center;
+}
+
+.metrics-expansion-milestone > strong {
+  color: var(--ink);
+  font-size: 0.78rem;
+  line-height: 1;
+}
+
+.metrics-expansion-bar-track {
+  display: flex;
+  height: 82px;
+  align-items: flex-end;
   border-bottom: 1px solid #aeb9b7;
 }
 
-.metrics-projection-bars span {
+.metrics-expansion-bar {
   display: block;
-  min-height: 8px;
+  width: 100%;
+  min-height: 7px;
   border-radius: 3px 3px 0 0;
-  background: #16786c;
+  background: #4f7d89;
 }
 
-.metrics-projection-bars span:last-child {
+.metrics-expansion-milestone:nth-child(3) .metrics-expansion-bar {
+  background: #63739b;
+}
+
+.metrics-expansion-milestone:nth-child(4) .metrics-expansion-bar {
+  background: #8a7554;
+}
+
+.metrics-expansion-milestone:nth-child(5) .metrics-expansion-bar {
+  background: #7b5f78;
+}
+
+.metrics-expansion-bar.current {
   background: #174f48;
 }
 
-.metrics-projection-axis {
-  display: flex;
-  justify-content: space-between;
-  color: var(--subtle);
-  font-size: 0.75rem;
-  font-weight: 650;
+.metrics-expansion-product {
+  align-self: start;
+  overflow-wrap: anywhere;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 720;
+  line-height: 1.2;
 }
 
-.metrics-projection-axis.single {
-  justify-content: flex-end;
+.metrics-expansion-milestone small {
+  color: var(--subtle);
+  font-size: 0.66rem;
+  font-weight: 620;
+  white-space: nowrap;
 }
 
 @media (max-width: 1420px) {
@@ -3419,13 +3455,31 @@ main.screen-metrics {
     font-size: 2.6rem;
   }
 
-  .metrics-projection-bars {
-    height: 72px;
+  .metrics-expansion-bars {
     gap: 5px;
   }
 
-  .metrics-projection-axis {
-    font-size: 0.7rem;
+  .metrics-expansion-milestone {
+    grid-template-rows: 16px 72px minmax(44px, auto) auto;
+    gap: 3px;
+  }
+
+  .metrics-expansion-milestone > strong {
+    font-size: 0.68rem;
+  }
+
+  .metrics-expansion-bar-track {
+    height: 72px;
+  }
+
+  .metrics-expansion-product {
+    font-size: 0.62rem;
+  }
+
+  .metrics-expansion-milestone small {
+    font-size: 0.58rem;
+    line-height: 1.1;
+    white-space: normal;
   }
 
   .brand-mark {

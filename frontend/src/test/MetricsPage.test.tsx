@@ -50,12 +50,19 @@ describe("MetricsPage", () => {
     expect(within(summary).getByText("60 hours")).toBeVisible();
     expect(within(summary).getByText("8")).toBeVisible();
     expect(screen.getByRole("heading", { name: "Projected time saved" })).toBeVisible();
-    expect(screen.getByText("275 hours")).toBeVisible();
-    expect(screen.getByText("in 4.6 months")).toBeVisible();
-    expect(screen.getByText("At current four-week pace")).toBeVisible();
-    expect(screen.getByText("1 month")).toBeVisible();
-    expect(screen.getByText("3 months")).toBeVisible();
-    expect(screen.getByText("4.6 months")).toBeVisible();
+    expect(screen.getByText("4,775 hours")).toBeVisible();
+    expect(screen.getByText("potential saved")).toBeVisible();
+    expect(screen.getByText("Across five product workflows")).toBeVisible();
+    expect(screen.getByText("L2L")).toBeVisible();
+    expect(screen.getByText("Zero Touches")).toBeVisible();
+    expect(screen.getByText("SD-WAN new installs")).toBeVisible();
+    expect(screen.getByText("FortiGate installs")).toBeVisible();
+    expect(screen.getByText("Plug and Play VPN installs")).toBeVisible();
+    expect(screen.getByText("Current product")).toBeVisible();
+    expect(screen.getByText("+500 hours")).toBeVisible();
+    expect(screen.getAllByText("+1,000 hours")).toHaveLength(2);
+    expect(screen.getByText("+2,000 hours")).toBeVisible();
+    expect(screen.queryByText(/months?/)).not.toBeInTheDocument();
     expect(screen.queryByText("800 orders")).not.toBeInTheDocument();
     const aggregation = screen.getByRole("group", {
       name: "Slider, Warehouse, UPS, FortiGate, SharePoint, Power Apps, OneDrive, and FlightDeck aggregate into Activations Scrub Tool"
@@ -76,7 +83,7 @@ describe("MetricsPage", () => {
     ).not.toBeInTheDocument();
     expect(
       screen.getByRole("img", {
-        name: "Projected time saved: 275 hours in 4.6 months at the current four-week pace"
+        name: "Projected time saved through product expansion: 4,775 hours, including L2L, Zero Touches, SD-WAN new installs, FortiGate installs, and Plug and Play VPN installs"
       })
     ).toBeVisible();
     expect(screen.queryByText("Capacity returned")).not.toBeInTheDocument();
@@ -164,15 +171,15 @@ describe("MetricsPage", () => {
     expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
   });
 
-  it("projects the observed four-week pace on a monthly axis", () => {
+  it("updates the product-expansion total from the observed L2L projection", () => {
     render(<MetricsPage evidence={evidenceWithProjection(6000, 100)} />);
 
     expect(
       screen.getByRole("img", {
-        name: "Projected time saved: 800 hours in 8 months at the current four-week pace"
+        name: "Projected time saved through product expansion: 5,300 hours, including L2L, Zero Touches, SD-WAN new installs, FortiGate installs, and Plug and Play VPN installs"
       })
     ).toBeVisible();
-    expect(screen.getByText("in 8 months")).toBeVisible();
+    expect(screen.getByText("Current product")).toBeVisible();
   });
 
   it("renders a zero projection when there are no observed orders", () => {
@@ -180,7 +187,7 @@ describe("MetricsPage", () => {
 
     expect(
       screen.getByRole("img", {
-        name: "Projected time saved: 0 hours in 0 months at the current four-week pace"
+        name: "Projected time saved through product expansion: 4,500 hours, including L2L, Zero Touches, SD-WAN new installs, FortiGate installs, and Plug and Play VPN installs"
       })
     ).toBeVisible();
   });
