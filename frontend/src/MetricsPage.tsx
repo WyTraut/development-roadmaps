@@ -24,12 +24,13 @@ import type { MetricsEvidence, MetricsSnapshot } from "./types";
 
 
 const wholeNumber = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+const oneDecimalNumber = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
 const projectionOrderTarget = 800;
 const expansionProducts = [
-  { id: "zero-touch", name: "Zero Touches", hours: 500 },
-  { id: "sdwan", name: "SD-WAN new installs", hours: 1000 },
-  { id: "fortigate", name: "FortiGate installs", hours: 1000 },
-  { id: "plug-and-play", name: "Plug and Play VPN installs", hours: 2000 }
+  { id: "zero-touch", name: "Zero Touches", shortName: "Zero Touches", hours: 500 },
+  { id: "sdwan", name: "SD-WAN new installs", shortName: "SD-WAN", hours: 1000 },
+  { id: "fortigate", name: "FortiGate installs", shortName: "FortiGate", hours: 1000 },
+  { id: "plug-and-play", name: "Plug and Play VPN installs", shortName: "P&P VPN", hours: 2000 }
 ];
 const aggregationSystems: Array<{ name: string; icon: LucideIcon }> = [
   { name: "Slider", icon: CalendarDays },
@@ -45,6 +46,30 @@ const aggregationSystems: Array<{ name: string; icon: LucideIcon }> = [
 function formatHours(minutes: number): string {
   const hours = Math.round(minutes / 60);
   return `${wholeNumber.format(hours)} ${hours === 1 ? "hour" : "hours"}`;
+}
+
+function formatMonths(months: number): string {
+  const rounded = Math.round(months * 10) / 10;
+  return `${oneDecimalNumber.format(rounded)} ${rounded === 1 ? "month" : "months"}`;
+}
+
+function buildMonthlyMilestones(months: number): number[] {
+  if (!Number.isFinite(months) || months <= 0) return [0];
+
+  if (months <= 8) {
+    const wholeMonths = Math.floor(months);
+    const milestones = Array.from({ length: wholeMonths }, (_, index) => index + 1);
+    if (months - wholeMonths >= 0.05 || milestones.length === 0) milestones.push(months);
+    return milestones;
+  }
+
+  return Array.from({ length: 8 }, (_, index) => (months * (index + 1)) / 8);
+}
+
+function formatProductList(products: string[]): string {
+  if (products.length <= 1) return products[0] ?? "";
+  if (products.length === 2) return `${products[0]} and ${products[1]}`;
+  return `${products.slice(0, -1).join(", ")}, and ${products[products.length - 1]}`;
 }
 
 function formatDatePart(timestamp: string): string {
@@ -368,70 +393,130 @@ function ProjectedSavings({
   orders: number;
   sourceId: string;
 }) {
+  const observedMinutes = Math.max(0, minutes);
   const projectedMinutes = orders > 0
-    ? (Math.max(0, minutes) / orders) * projectionOrderTarget
+    ? (observedMinutes / orders) * projectionOrderTarget
     : 0;
+  const monthsToTarget = observedMinutes > 0 ? projectedMinutes / observedMinutes : 0;
+  const monthlyMilestones = buildMonthlyMilestones(monthsToTarget);
+  const axisMilestones = monthlyMilestones.length <= 2
+    ? monthlyMilestones
+    : [
+        monthlyMilestones[0],
+        monthlyMilestones[Math.floor(monthlyMilestones.length / 2)],
+        monthlyMilestones[monthlyMilestones.length - 1]
+      ];
   const currentHours = Math.round(projectedMinutes / 60);
-  let cumulativeHours = currentHours;
-  const expansionMilestones = [
+  const productStages = [
     {
       id: "l2l",
       name: "L2L",
+      shortName: "L2L",
       contribution: currentHours,
-      cumulative: currentHours,
       current: true
     },
-    ...expansionProducts.map((product) => {
-      cumulativeHours += product.hours;
-      return {
-        ...product,
-        contribution: product.hours,
-        cumulative: cumulativeHours,
-        current: false
-      };
-    })
+    ...expansionProducts.map((product) => ({
+      ...product,
+      contribution: product.hours,
+      current: false
+    }))
   ];
-  const totalPotentialHours = expansionMilestones[expansionMilestones.length - 1].cumulative;
+  const [selectedProductIndex, setSelectedProductIndex] = useState(0);
+  const [hoveredProductIndex, setHoveredProductIndex] = useState<number | null>(null);
+  const activeProductIndex = hoveredProductIndex ?? selectedProductIndex;
+  const includedProducts = productStages.slice(0, activeProductIndex + 1);
+  const activeHours = includedProducts.reduce((total, product) => total + product.contribution, 0);
   const headingId = `metrics-projection-${sourceId}`;
-  const totalPotential = `${wholeNumber.format(totalPotentialHours)} hours`;
+  const projectedTime = `${wholeNumber.format(activeHours)} ${activeHours === 1 ? "hour" : "hours"}`;
+  const projectionDuration = formatMonths(monthsToTarget);
+  const includedProductNames = formatProductList(includedProducts.map((product) => product.name));
 
   return (
     <section className="metrics-projection-section" aria-labelledby={headingId}>
       <div className="metrics-projection-heading">
         <h2 id={headingId}>Projected time saved</h2>
       </div>
-      <div
-        className="metrics-projection-graphic"
-        role="img"
-        aria-label={`Projected time saved through product expansion: ${totalPotential}, including L2L, Zero Touches, SD-WAN new installs, FortiGate installs, and Plug and Play VPN installs`}
-      >
+      <div className="metrics-projection-graphic">
         <div className="metrics-projection-value">
-          <strong>{totalPotential}</strong>
-          <span>potential saved</span>
-          <small>Across five product workflows</small>
+          <strong>{projectedTime}</strong>
+          <span>in {projectionDuration}</span>
+          <small>
+            {activeProductIndex === 0
+              ? "Current L2L automation"
+              : `${activeProductIndex + 1} products automated`}
+          </small>
         </div>
-        <div className="metrics-expansion-plot" aria-hidden="true">
-          <div className="metrics-expansion-bars">
-            {expansionMilestones.map((milestone) => (
-              <div className="metrics-expansion-milestone" key={milestone.id}>
-                <strong>{wholeNumber.format(milestone.cumulative)}</strong>
-                <span className="metrics-expansion-bar-track">
+        <div className="metrics-projection-visual">
+          <div
+            className="metrics-projection-plot"
+            role="img"
+            aria-label={`Projected time saved: ${projectedTime} in ${projectionDuration} with ${includedProductNames} automation`}
+          >
+            <div
+              className="metrics-projection-bars"
+              style={{ gridTemplateColumns: `repeat(${monthlyMilestones.length}, minmax(18px, 1fr))` }}
+              aria-hidden="true"
+            >
+              {monthlyMilestones.map((month) => (
+                <span className="metrics-projection-bar-track" key={month}>
                   <span
-                    className={`metrics-expansion-bar${milestone.current ? " current" : ""}`}
+                    className="metrics-projection-bar-stack"
                     style={{
-                      height: `${totalPotentialHours > 0
-                        ? (milestone.cumulative / totalPotentialHours) * 100
-                        : 0}%`
+                      height: `${monthsToTarget > 0 ? (month / monthsToTarget) * 100 : 0}%`
                     }}
-                  />
+                  >
+                    {includedProducts.map((product) => (
+                      <span
+                        className={`metrics-projection-product-layer product-${product.id}`}
+                        key={product.id}
+                        style={{
+                          height: `${activeHours > 0
+                            ? (product.contribution / activeHours) * 100
+                            : 0}%`
+                        }}
+                      />
+                    ))}
+                  </span>
                 </span>
-                <span className="metrics-expansion-product">{milestone.name}</span>
+              ))}
+            </div>
+            <div
+              className={`metrics-projection-axis${axisMilestones.length === 1 ? " single" : ""}`}
+              aria-hidden="true"
+            >
+              {axisMilestones.map((month) => (
+                <span key={month}>{formatMonths(month)}</span>
+              ))}
+            </div>
+          </div>
+          <div
+            className="metrics-product-selector"
+            role="group"
+            aria-label="Product automation scenarios"
+            onMouseLeave={() => setHoveredProductIndex(null)}
+          >
+            {productStages.map((product, index) => (
+              <button
+                className={`metrics-product-option product-${product.id}${
+                  index <= activeProductIndex ? " included" : ""
+                }${selectedProductIndex === index ? " selected" : ""}`}
+                type="button"
+                key={product.id}
+                aria-label={`Include through ${product.name}`}
+                aria-pressed={selectedProductIndex === index}
+                title={`Include through ${product.name}`}
+                onMouseEnter={() => setHoveredProductIndex(index)}
+                onFocus={() => setHoveredProductIndex(index)}
+                onBlur={() => setHoveredProductIndex(null)}
+                onClick={() => setSelectedProductIndex(index)}
+              >
+                <strong>{product.shortName}</strong>
                 <small>
-                  {milestone.current
-                    ? "Current product"
-                    : `+${wholeNumber.format(milestone.contribution)} hours`}
+                  {product.current
+                    ? "Current"
+                    : `+${wholeNumber.format(product.contribution)}h`}
                 </small>
-              </div>
+              </button>
             ))}
           </div>
         </div>
