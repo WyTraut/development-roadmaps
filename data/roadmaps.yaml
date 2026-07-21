@@ -16,7 +16,7 @@ defaults:
 
 metrics_sources:
   - id: l2l_scrubber
-    name: L2L Scrubber
+    name: Activations Scrub Tool
     source_type: github_issue
     repository: WyattTrautman/L2L-Scrubber
     issue_number: 1
