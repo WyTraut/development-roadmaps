@@ -448,19 +448,19 @@ function ProjectedSavings({
       <div className="metrics-projection-graphic">
         <div className="metrics-projection-value">
           <strong>{projectedTime}</strong>
-          <span>in {projectionDuration}</span>
-          <small>
-            {activeProductIndex === 0
-              ? "Current L2L automation"
-              : `${activeProductIndex + 1} products automated`}
-          </small>
+          {showingExpansion ? null : (
+            <>
+              <span>in {projectionDuration}</span>
+              <small>Current L2L automation</small>
+            </>
+          )}
         </div>
         <div className="metrics-projection-visual">
           {showingExpansion ? (
             <div
               className="metrics-expansion-contribution-plot"
               role="img"
-              aria-label={`Projected time saved: ${projectedTime} in ${projectionDuration} with ${includedProductNames} automation. Product contributions: ${contributionSummary}`}
+              aria-label={`Projected time saved with ${includedProductNames} automation: ${projectedTime}. Product contributions: ${contributionSummary}`}
             >
               <div
                 className="metrics-expansion-contributions"
