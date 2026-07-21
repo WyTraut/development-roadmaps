@@ -2714,6 +2714,68 @@ main.screen-metrics {
   font-weight: 720;
 }
 
+.metrics-summary-label-row {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+}
+
+.metrics-info {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+.metrics-info-button {
+  display: inline-flex;
+  width: 19px;
+  height: 19px;
+  padding: 0;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #a8b0ae;
+  border-radius: 50%;
+  background: var(--surface);
+  color: #626b69;
+  cursor: help;
+}
+
+.metrics-info-button:hover,
+.metrics-info-button:focus-visible {
+  border-color: #16786c;
+  color: #16786c;
+}
+
+.metrics-info-button:focus-visible {
+  outline: 2px solid #9acbc3;
+  outline-offset: 2px;
+}
+
+.metrics-info-tooltip {
+  position: absolute;
+  top: calc(100% + 8px);
+  z-index: 30;
+  width: min(280px, calc(100vw - 40px));
+  padding: 10px 12px;
+  border-radius: 5px;
+  background: #25302e;
+  box-shadow: 0 8px 24px rgba(23, 32, 43, 0.2);
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 520;
+  line-height: 1.45;
+  text-align: left;
+}
+
+.metrics-info-tooltip.align-left {
+  left: 0;
+}
+
+.metrics-info-tooltip.align-right {
+  right: 0;
+}
+
 .metrics-summary-card > strong {
   grid-column: 1 / -1;
   margin-top: 17px;
