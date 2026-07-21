@@ -223,19 +223,19 @@ function SystemAggregation({
           <ArrowRight size={30} />
         </span>
 
-        <div className="metrics-aggregation-target">
-          <button
-            ref={triggerRef}
-            className="metrics-aggregation-target-icon"
-            type="button"
-            aria-label={`How ${productName} works`}
-            title={`How ${productName} works`}
-            onClick={() => setExplanationOpen(true)}
-          >
+        <button
+          ref={triggerRef}
+          className="metrics-aggregation-target"
+          type="button"
+          aria-label={`How ${productName} works`}
+          title={`How ${productName} works`}
+          onClick={() => setExplanationOpen(true)}
+        >
+          <span className="metrics-aggregation-target-icon" aria-hidden="true">
             <Layers3 aria-hidden="true" size={25} />
-          </button>
+          </span>
           <strong>{productName}</strong>
-        </div>
+        </button>
       </div>
 
       {explanationOpen ? (
