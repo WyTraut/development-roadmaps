@@ -116,24 +116,24 @@ describe("MetricsPage", () => {
     const user = userEvent.setup();
     render(<MetricsPage evidence={evidence} />);
 
-    const trigger = screen.getByRole("button", { name: "How Activations Scrub Tool works" });
-    expect(trigger).toHaveAttribute("title", "How Activations Scrub Tool works");
+    const trigger = screen.getByRole("button", { name: "Activation Scrub Tool Usage" });
+    expect(trigger).toHaveAttribute("title", "Activation Scrub Tool Usage");
     expect(trigger).toHaveClass("metrics-aggregation-target");
     expect(within(trigger).getByText("Activations Scrub Tool")).toBeVisible();
 
     await user.click(trigger);
-    const dialog = screen.getByRole("dialog", { name: "How Activations Scrub Tool works" });
+    const dialog = screen.getByRole("dialog", { name: "Activation Scrub Tool Usage" });
     const closeButton = within(dialog).getByRole("button", { name: "Close explanation" });
 
     expect(closeButton).toHaveFocus();
     expect(dialog).toHaveTextContent(
-      "Activations Scrub Tool starts with a task ID from Slider or FlightDeck. It uses that ID to open the matching invite and reads the order number, location, and scheduled date."
+      "The Activations Scrub Tool starts with a task ID from Slider or FlightDeck. It uses that ID to open the matching invite and reads the order number, location, and scheduled date."
     );
     expect(dialog).toHaveTextContent(
-      "It uses those details to find the matching sales intake PDF and supporting files in SharePoint and OneDrive. It checks the related Warehouse and Power Apps record, adds UPS delivery status when available, and finds the matching FortiGate files."
+      "It uses those details to find the matching sales intake PDF and supporting files in SharePoint and OneDrive. It checks the related Warehouse and Power Apps records, adds UPS delivery status when available, and finds the matching FortiGate files."
     );
     expect(dialog).toHaveTextContent(
-      "The app compares the order ID, location, schedule, equipment, shipping, and device details across those sources. Matching information is brought together in one review package for a person to confirm."
+      "For each scrub, the app runs 28 checks covering IP schemas, routing logic, BGP configuration, shipping, equipment, scheduling, and order details across those sources. Matching information is brought together in one review package for a person to confirm."
     );
     for (const system of [
       "Slider",
@@ -151,17 +151,17 @@ describe("MetricsPage", () => {
     expect(dialog).not.toHaveTextContent(/\b[A-Z]{2,}-\d+\b/);
 
     await user.click(closeButton);
-    expect(screen.queryByRole("dialog", { name: "How Activations Scrub Tool works" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "Activation Scrub Tool Usage" })).not.toBeInTheDocument();
     expect(trigger).toHaveFocus();
 
     await user.click(trigger);
     await user.click(screen.getByTestId("metrics-explanation-backdrop"));
-    expect(screen.queryByRole("dialog", { name: "How Activations Scrub Tool works" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "Activation Scrub Tool Usage" })).not.toBeInTheDocument();
     expect(trigger).toHaveFocus();
 
     await user.click(trigger);
     await user.keyboard("{Escape}");
-    expect(screen.queryByRole("dialog", { name: "How Activations Scrub Tool works" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "Activation Scrub Tool Usage" })).not.toBeInTheDocument();
     expect(trigger).toHaveFocus();
   });
 

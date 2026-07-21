@@ -275,6 +275,7 @@ function SystemAggregation({
   const closeRef = useRef<HTMLButtonElement>(null);
   const headingId = `metrics-explanation-${sourceId}`;
   const copyId = `${headingId}-copy`;
+  const usageDialogTitle = "Activation Scrub Tool Usage";
 
   function closeExplanation() {
     setExplanationOpen(false);
@@ -331,8 +332,8 @@ function SystemAggregation({
           ref={triggerRef}
           className="metrics-aggregation-target"
           type="button"
-          aria-label={`How ${productName} works`}
-          title={`How ${productName} works`}
+          aria-label={usageDialogTitle}
+          title={usageDialogTitle}
           onClick={() => setExplanationOpen(true)}
         >
           <span className="metrics-aggregation-target-icon" aria-hidden="true">
@@ -361,7 +362,7 @@ function SystemAggregation({
               <span className="metrics-explanation-header-icon" aria-hidden="true">
                 <Layers3 size={21} />
               </span>
-              <h2 id={headingId}>How {productName} works</h2>
+              <h2 id={headingId}>{usageDialogTitle}</h2>
               <button
                 ref={closeRef}
                 className="metrics-explanation-close"
@@ -375,18 +376,20 @@ function SystemAggregation({
             </header>
             <div className="metrics-explanation-copy" id={copyId}>
               <p>
-                {productName} starts with a task ID from Slider or FlightDeck. It uses that ID to
-                open the matching invite and reads the order number, location, and scheduled date.
+                The {productName} starts with a task ID from Slider or FlightDeck. It uses that ID
+                to open the matching invite and reads the order number, location, and scheduled
+                date.
               </p>
               <p>
                 It uses those details to find the matching sales intake PDF and supporting files
-                in SharePoint and OneDrive. It checks the related Warehouse and Power Apps record,
+                in SharePoint and OneDrive. It checks the related Warehouse and Power Apps records,
                 adds UPS delivery status when available, and finds the matching FortiGate files.
               </p>
               <p>
-                The app compares the order ID, location, schedule, equipment, shipping, and device
-                details across those sources. Matching information is brought together in one
-                review package for a person to confirm.
+                For each scrub, the app runs 28 checks covering IP schemas, routing logic, BGP
+                configuration, shipping, equipment, scheduling, and order details across those
+                sources. Matching information is brought together in one review package for a
+                person to confirm.
               </p>
             </div>
           </section>
