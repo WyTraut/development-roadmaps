@@ -460,7 +460,11 @@ function ProjectedSavings({
       <div className="metrics-projection-graphic">
         <div className="metrics-projection-value">
           <strong>{projectedTime}</strong>
-          {showingExpansion ? null : (
+          {showingExpansion ? (
+            <small>
+              Projected savings if these products are implemented in the Activations Scrub Tool
+            </small>
+          ) : (
             <>
               <span>in {projectionDuration}</span>
               <small>Current L2L automation</small>
@@ -538,6 +542,10 @@ function ProjectedSavings({
               </div>
             </div>
           )}
+          <span className="metrics-product-hint">
+            Hover products left to right
+            <ArrowRight aria-hidden="true" size={13} strokeWidth={2} />
+          </span>
           <div
             className="metrics-product-selector"
             role="group"

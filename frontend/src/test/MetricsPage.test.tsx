@@ -55,9 +55,15 @@ describe("MetricsPage", () => {
     expect(screen.getByText("275 hours")).toBeVisible();
     expect(screen.getByText("in 4.6 months")).toBeVisible();
     expect(screen.getByText("Current L2L automation")).toBeVisible();
+    expect(
+      screen.queryByText(
+        "Projected savings if these products are implemented in the Activations Scrub Tool"
+      )
+    ).not.toBeInTheDocument();
     expect(screen.getByText("1 month")).toBeVisible();
     expect(screen.getByText("3 months")).toBeVisible();
     expect(screen.getByText("4.6 months")).toBeVisible();
+    expect(screen.getByText("Hover products left to right")).toBeVisible();
     const productScenarios = screen.getByRole("group", { name: "Product automation scenarios" });
     expect(within(productScenarios).getByRole("button", { name: "Include through L2L" })).toBeVisible();
     expect(
@@ -202,6 +208,11 @@ describe("MetricsPage", () => {
     ).toBeVisible();
     expect(screen.queryByText("in 4.6 months")).not.toBeInTheDocument();
     expect(screen.queryByText("Current L2L automation")).not.toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Projected savings if these products are implemented in the Activations Scrub Tool"
+      )
+    ).toBeVisible();
     expect(screen.queryByText("1 month")).not.toBeInTheDocument();
     expect(screen.queryByText("3 months")).not.toBeInTheDocument();
     expect(screen.queryByText("4.6 months")).not.toBeInTheDocument();
