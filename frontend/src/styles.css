@@ -3155,6 +3155,17 @@ main.screen-metrics {
   transition: height 180ms ease;
 }
 
+.metrics-product-hint {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: 4px;
+  color: var(--subtle);
+  font-size: 0.64rem;
+  font-weight: 650;
+  line-height: 1;
+}
+
 .metrics-product-selector {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
