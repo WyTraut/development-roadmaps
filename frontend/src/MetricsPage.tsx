@@ -24,8 +24,8 @@ import type { MetricsEvidence, MetricsSnapshot } from "./types";
 
 
 const wholeNumber = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+const oneDecimalNumber = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
 const projectionOrderTarget = 800;
-const projectionSteps = 8;
 const aggregationSystems: Array<{ name: string; icon: LucideIcon }> = [
   { name: "Slider", icon: CalendarDays },
   { name: "Warehouse", icon: Database },
@@ -50,6 +50,24 @@ function formatDatePart(timestamp: string): string {
     day: "numeric",
     year: "numeric"
   }).format(date);
+}
+
+function formatMonths(months: number): string {
+  const rounded = Math.round(months * 10) / 10;
+  return `${oneDecimalNumber.format(rounded)} ${rounded === 1 ? "month" : "months"}`;
+}
+
+function buildMonthlyMilestones(months: number): number[] {
+  if (!Number.isFinite(months) || months <= 0) return [0];
+
+  if (months <= 8) {
+    const wholeMonths = Math.floor(months);
+    const milestones = Array.from({ length: wholeMonths }, (_, index) => index + 1);
+    if (months - wholeMonths >= 0.05 || milestones.length === 0) milestones.push(months);
+    return milestones;
+  }
+
+  return Array.from({ length: 8 }, (_, index) => (months * (index + 1)) / 8);
 }
 
 export default function MetricsPage({ evidence }: { evidence: MetricsEvidence }) {
@@ -365,8 +383,18 @@ function ProjectedSavings({
   const projectedMinutes = orders > 0
     ? (Math.max(0, minutes) / orders) * projectionOrderTarget
     : 0;
+  const monthsToTarget = minutes > 0 ? projectedMinutes / minutes : 0;
+  const monthlyMilestones = buildMonthlyMilestones(monthsToTarget);
+  const axisMilestones = monthlyMilestones.length <= 2
+    ? monthlyMilestones
+    : [
+        monthlyMilestones[0],
+        monthlyMilestones[Math.floor(monthlyMilestones.length / 2)],
+        monthlyMilestones[monthlyMilestones.length - 1]
+      ];
   const headingId = `metrics-projection-${sourceId}`;
   const projectedTime = formatHours(projectedMinutes);
+  const projectionDuration = formatMonths(monthsToTarget);
 
   return (
     <section className="metrics-projection-section" aria-labelledby={headingId}>
@@ -376,25 +404,35 @@ function ProjectedSavings({
       <div
         className="metrics-projection-graphic"
         role="img"
-        aria-label={`Projected time saved at ${wholeNumber.format(projectionOrderTarget)} orders: ${projectedTime}`}
+        aria-label={`Projected time saved: ${projectedTime} in ${projectionDuration} at the current four-week pace`}
       >
         <div className="metrics-projection-value">
           <strong>{projectedTime}</strong>
-          <span>saved</span>
+          <span>in {projectionDuration}</span>
+          <small>At current four-week pace</small>
         </div>
         <div className="metrics-projection-plot" aria-hidden="true">
-          <div className="metrics-projection-bars">
-            {Array.from({ length: projectionSteps }, (_, index) => (
+          <div
+            className="metrics-projection-bars"
+            style={{
+              gridTemplateColumns: `repeat(${monthlyMilestones.length}, minmax(18px, 1fr))`
+            }}
+          >
+            {monthlyMilestones.map((month) => (
               <span
-                key={index}
-                style={{ height: `${((index + 1) / projectionSteps) * 100}%` }}
+                key={month}
+                style={{
+                  height: `${monthsToTarget > 0 ? (month / monthsToTarget) * 100 : 0}%`
+                }}
               />
             ))}
           </div>
-          <div className="metrics-projection-axis">
-            <span>100</span>
-            <span>400</span>
-            <span>800 orders</span>
+          <div
+            className={`metrics-projection-axis${axisMilestones.length === 1 ? " single" : ""}`}
+          >
+            {axisMilestones.map((month) => (
+              <span key={month}>{formatMonths(month)}</span>
+            ))}
           </div>
         </div>
       </div>

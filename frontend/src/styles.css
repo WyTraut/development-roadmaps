@@ -3031,6 +3031,13 @@ main.screen-metrics {
   font-weight: 720;
 }
 
+.metrics-projection-value small {
+  margin-top: 5px;
+  color: var(--subtle);
+  font-size: 0.75rem;
+  font-weight: 620;
+}
+
 .metrics-projection-plot {
   display: grid;
   gap: 8px;
@@ -3039,7 +3046,6 @@ main.screen-metrics {
 .metrics-projection-bars {
   display: grid;
   height: 96px;
-  grid-template-columns: repeat(8, minmax(18px, 1fr));
   align-items: end;
   gap: 8px;
   border-bottom: 1px solid #aeb9b7;
@@ -3062,6 +3068,10 @@ main.screen-metrics {
   color: var(--subtle);
   font-size: 0.75rem;
   font-weight: 650;
+}
+
+.metrics-projection-axis.single {
+  justify-content: flex-end;
 }
 
 @media (max-width: 1420px) {

@@ -14,10 +14,10 @@ const evidence: MetricsEvidence = {
       source_url: "https://github.com/WyattTrautman/L2L-Scrubber/issues/1",
       purpose: "Adoption and value evidence from real-world usage.",
       last_aggregated: "2026-07-20T15:21:28Z",
-      total_scrubs: 163,
-      warehouse_lookups: 49,
+      total_scrubs: 175,
+      warehouse_lookups: 53,
       minutes_saved_per_warehouse_query: 2,
-      estimated_minutes_saved: 3356,
+      estimated_minutes_saved: 3610,
       tracked_clients: 8,
       daily_totals: [
         { date: "2026-07-17", scrubs: 5 },
@@ -44,14 +44,19 @@ describe("MetricsPage", () => {
     expect(screen.queryByText("Usage to date")).not.toBeInTheDocument();
     expect(screen.queryByText("L2L Scrubber", { exact: true })).not.toBeInTheDocument();
     const summary = screen.getByLabelText("Activations Scrub Tool aggregate summary");
-    expect(within(summary).getByText("163")).toBeVisible();
-    expect(within(summary).getByText("49")).toBeVisible();
+    expect(within(summary).getByText("175")).toBeVisible();
+    expect(within(summary).getByText("53")).toBeVisible();
     expect(within(summary).getByText("Warehouse queries")).toBeVisible();
-    expect(within(summary).getByText("56 hours")).toBeVisible();
+    expect(within(summary).getByText("60 hours")).toBeVisible();
     expect(within(summary).getByText("8")).toBeVisible();
     expect(screen.getByRole("heading", { name: "Projected time saved" })).toBeVisible();
     expect(screen.getByText("275 hours")).toBeVisible();
-    expect(screen.getByText("800 orders")).toBeVisible();
+    expect(screen.getByText("in 4.6 months")).toBeVisible();
+    expect(screen.getByText("At current four-week pace")).toBeVisible();
+    expect(screen.getByText("1 month")).toBeVisible();
+    expect(screen.getByText("3 months")).toBeVisible();
+    expect(screen.getByText("4.6 months")).toBeVisible();
+    expect(screen.queryByText("800 orders")).not.toBeInTheDocument();
     const aggregation = screen.getByRole("group", {
       name: "Slider, Warehouse, UPS, FortiGate, SharePoint, Power Apps, OneDrive, and FlightDeck aggregate into Activations Scrub Tool"
     });
@@ -69,7 +74,9 @@ describe("MetricsPage", () => {
       within(aggregation).queryByText(/Scheduling|Orders|Tracking|PDFs \+ configs|Unified order view/)
     ).not.toBeInTheDocument();
     expect(
-      screen.getByRole("img", { name: "Projected time saved at 800 orders: 275 hours" })
+      screen.getByRole("img", {
+        name: "Projected time saved: 275 hours in 4.6 months at the current four-week pace"
+      })
     ).toBeVisible();
     expect(screen.queryByText("Capacity returned")).not.toBeInTheDocument();
     expect(screen.queryByText("2 min saved each")).not.toBeInTheDocument();
@@ -156,19 +163,24 @@ describe("MetricsPage", () => {
     expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
   });
 
-  it("projects the observed average across 800 orders", () => {
+  it("projects the observed four-week pace on a monthly axis", () => {
     render(<MetricsPage evidence={evidenceWithProjection(6000, 100)} />);
 
     expect(
-      screen.getByRole("img", { name: "Projected time saved at 800 orders: 800 hours" })
+      screen.getByRole("img", {
+        name: "Projected time saved: 800 hours in 8 months at the current four-week pace"
+      })
     ).toBeVisible();
+    expect(screen.getByText("in 8 months")).toBeVisible();
   });
 
   it("renders a zero projection when there are no observed orders", () => {
     render(<MetricsPage evidence={evidenceWithProjection(0, 0)} />);
 
     expect(
-      screen.getByRole("img", { name: "Projected time saved at 800 orders: 0 hours" })
+      screen.getByRole("img", {
+        name: "Projected time saved: 0 hours in 0 months at the current four-week pace"
+      })
     ).toBeVisible();
   });
 });
