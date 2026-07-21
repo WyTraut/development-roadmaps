@@ -87,6 +87,8 @@ describe("MetricsPage", () => {
 
     const trigger = screen.getByRole("button", { name: "How Activations Scrub Tool works" });
     expect(trigger).toHaveAttribute("title", "How Activations Scrub Tool works");
+    expect(trigger).toHaveClass("metrics-aggregation-target");
+    expect(within(trigger).getByText("Activations Scrub Tool")).toBeVisible();
 
     await user.click(trigger);
     const dialog = screen.getByRole("dialog", { name: "How Activations Scrub Tool works" });
