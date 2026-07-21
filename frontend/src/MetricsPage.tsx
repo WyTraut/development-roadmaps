@@ -24,8 +24,13 @@ import type { MetricsEvidence, MetricsSnapshot } from "./types";
 
 
 const wholeNumber = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
-const oneDecimalNumber = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
 const projectionOrderTarget = 800;
+const expansionProducts = [
+  { id: "zero-touch", name: "Zero Touches", hours: 500 },
+  { id: "sdwan", name: "SD-WAN new installs", hours: 1000 },
+  { id: "fortigate", name: "FortiGate installs", hours: 1000 },
+  { id: "plug-and-play", name: "Plug and Play VPN installs", hours: 2000 }
+];
 const aggregationSystems: Array<{ name: string; icon: LucideIcon }> = [
   { name: "Slider", icon: CalendarDays },
   { name: "Warehouse", icon: Database },
@@ -50,24 +55,6 @@ function formatDatePart(timestamp: string): string {
     day: "numeric",
     year: "numeric"
   }).format(date);
-}
-
-function formatMonths(months: number): string {
-  const rounded = Math.round(months * 10) / 10;
-  return `${oneDecimalNumber.format(rounded)} ${rounded === 1 ? "month" : "months"}`;
-}
-
-function buildMonthlyMilestones(months: number): number[] {
-  if (!Number.isFinite(months) || months <= 0) return [0];
-
-  if (months <= 8) {
-    const wholeMonths = Math.floor(months);
-    const milestones = Array.from({ length: wholeMonths }, (_, index) => index + 1);
-    if (months - wholeMonths >= 0.05 || milestones.length === 0) milestones.push(months);
-    return milestones;
-  }
-
-  return Array.from({ length: 8 }, (_, index) => (months * (index + 1)) / 8);
 }
 
 export default function MetricsPage({ evidence }: { evidence: MetricsEvidence }) {
@@ -384,18 +371,29 @@ function ProjectedSavings({
   const projectedMinutes = orders > 0
     ? (Math.max(0, minutes) / orders) * projectionOrderTarget
     : 0;
-  const monthsToTarget = minutes > 0 ? projectedMinutes / minutes : 0;
-  const monthlyMilestones = buildMonthlyMilestones(monthsToTarget);
-  const axisMilestones = monthlyMilestones.length <= 2
-    ? monthlyMilestones
-    : [
-        monthlyMilestones[0],
-        monthlyMilestones[Math.floor(monthlyMilestones.length / 2)],
-        monthlyMilestones[monthlyMilestones.length - 1]
-      ];
+  const currentHours = Math.round(projectedMinutes / 60);
+  let cumulativeHours = currentHours;
+  const expansionMilestones = [
+    {
+      id: "l2l",
+      name: "L2L",
+      contribution: currentHours,
+      cumulative: currentHours,
+      current: true
+    },
+    ...expansionProducts.map((product) => {
+      cumulativeHours += product.hours;
+      return {
+        ...product,
+        contribution: product.hours,
+        cumulative: cumulativeHours,
+        current: false
+      };
+    })
+  ];
+  const totalPotentialHours = expansionMilestones[expansionMilestones.length - 1].cumulative;
   const headingId = `metrics-projection-${sourceId}`;
-  const projectedTime = formatHours(projectedMinutes);
-  const projectionDuration = formatMonths(monthsToTarget);
+  const totalPotential = `${wholeNumber.format(totalPotentialHours)} hours`;
 
   return (
     <section className="metrics-projection-section" aria-labelledby={headingId}>
@@ -405,34 +403,35 @@ function ProjectedSavings({
       <div
         className="metrics-projection-graphic"
         role="img"
-        aria-label={`Projected time saved: ${projectedTime} in ${projectionDuration} at the current four-week pace`}
+        aria-label={`Projected time saved through product expansion: ${totalPotential}, including L2L, Zero Touches, SD-WAN new installs, FortiGate installs, and Plug and Play VPN installs`}
       >
         <div className="metrics-projection-value">
-          <strong>{projectedTime}</strong>
-          <span>in {projectionDuration}</span>
-          <small>At current four-week pace</small>
+          <strong>{totalPotential}</strong>
+          <span>potential saved</span>
+          <small>Across five product workflows</small>
         </div>
-        <div className="metrics-projection-plot" aria-hidden="true">
-          <div
-            className="metrics-projection-bars"
-            style={{
-              gridTemplateColumns: `repeat(${monthlyMilestones.length}, minmax(18px, 1fr))`
-            }}
-          >
-            {monthlyMilestones.map((month) => (
-              <span
-                key={month}
-                style={{
-                  height: `${monthsToTarget > 0 ? (month / monthsToTarget) * 100 : 0}%`
-                }}
-              />
-            ))}
-          </div>
-          <div
-            className={`metrics-projection-axis${axisMilestones.length === 1 ? " single" : ""}`}
-          >
-            {axisMilestones.map((month) => (
-              <span key={month}>{formatMonths(month)}</span>
+        <div className="metrics-expansion-plot" aria-hidden="true">
+          <div className="metrics-expansion-bars">
+            {expansionMilestones.map((milestone) => (
+              <div className="metrics-expansion-milestone" key={milestone.id}>
+                <strong>{wholeNumber.format(milestone.cumulative)}</strong>
+                <span className="metrics-expansion-bar-track">
+                  <span
+                    className={`metrics-expansion-bar${milestone.current ? " current" : ""}`}
+                    style={{
+                      height: `${totalPotentialHours > 0
+                        ? (milestone.cumulative / totalPotentialHours) * 100
+                        : 0}%`
+                    }}
+                  />
+                </span>
+                <span className="metrics-expansion-product">{milestone.name}</span>
+                <small>
+                  {milestone.current
+                    ? "Current product"
+                    : `+${wholeNumber.format(milestone.contribution)} hours`}
+                </small>
+              </div>
             ))}
           </div>
         </div>
