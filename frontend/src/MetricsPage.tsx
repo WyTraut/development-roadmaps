@@ -426,10 +426,19 @@ function ProjectedSavings({
   const activeProductIndex = hoveredProductIndex ?? selectedProductIndex;
   const includedProducts = productStages.slice(0, activeProductIndex + 1);
   const activeHours = includedProducts.reduce((total, product) => total + product.contribution, 0);
+  const maxContribution = Math.max(1, ...includedProducts.map((product) => product.contribution));
+  const showingExpansion = activeProductIndex > 0;
   const headingId = `metrics-projection-${sourceId}`;
   const projectedTime = `${wholeNumber.format(activeHours)} ${activeHours === 1 ? "hour" : "hours"}`;
   const projectionDuration = formatMonths(monthsToTarget);
   const includedProductNames = formatProductList(includedProducts.map((product) => product.name));
+  const contributionSummary = formatProductList(
+    includedProducts.map((product) =>
+      product.current
+        ? `${product.name} ${wholeNumber.format(product.contribution)} hours`
+        : `${product.name} adds ${wholeNumber.format(product.contribution)} hours`
+    )
+  );
 
   return (
     <section className="metrics-projection-section" aria-labelledby={headingId}>
@@ -447,48 +456,76 @@ function ProjectedSavings({
           </small>
         </div>
         <div className="metrics-projection-visual">
-          <div
-            className="metrics-projection-plot"
-            role="img"
-            aria-label={`Projected time saved: ${projectedTime} in ${projectionDuration} with ${includedProductNames} automation`}
-          >
+          {showingExpansion ? (
             <div
-              className="metrics-projection-bars"
-              style={{ gridTemplateColumns: `repeat(${monthlyMilestones.length}, minmax(18px, 1fr))` }}
-              aria-hidden="true"
+              className="metrics-expansion-contribution-plot"
+              role="img"
+              aria-label={`Projected time saved: ${projectedTime} in ${projectionDuration} with ${includedProductNames} automation. Product contributions: ${contributionSummary}`}
             >
-              {monthlyMilestones.map((month) => (
-                <span className="metrics-projection-bar-track" key={month}>
-                  <span
-                    className="metrics-projection-bar-stack"
-                    style={{
-                      height: `${monthsToTarget > 0 ? (month / monthsToTarget) * 100 : 0}%`
-                    }}
-                  >
-                    {includedProducts.map((product) => (
+              <div
+                className="metrics-expansion-contributions"
+                style={{
+                  gridTemplateColumns: `repeat(${productStages.length}, minmax(42px, 1fr))`
+                }}
+                aria-hidden="true"
+              >
+                {includedProducts.map((product) => (
+                  <span className="metrics-expansion-contribution" key={product.id}>
+                    <strong>
+                      {product.current ? "" : "+"}
+                      {wholeNumber.format(product.contribution)}h
+                    </strong>
+                    <span className="metrics-expansion-contribution-track">
                       <span
-                        className={`metrics-projection-product-layer product-${product.id}`}
-                        key={product.id}
+                        className={`metrics-expansion-contribution-bar product-${product.id}`}
                         style={{
-                          height: `${activeHours > 0
-                            ? (product.contribution / activeHours) * 100
-                            : 0}%`
+                          height: `${(product.contribution / maxContribution) * 100}%`
                         }}
                       />
-                    ))}
+                    </span>
                   </span>
-                </span>
-              ))}
+                ))}
+              </div>
             </div>
+          ) : (
             <div
-              className={`metrics-projection-axis${axisMilestones.length === 1 ? " single" : ""}`}
-              aria-hidden="true"
+              className="metrics-projection-plot"
+              role="img"
+              aria-label={`Projected time saved: ${projectedTime} in ${projectionDuration} with ${includedProductNames} automation`}
             >
-              {axisMilestones.map((month) => (
-                <span key={month}>{formatMonths(month)}</span>
-              ))}
+              <div
+                className="metrics-projection-bars"
+                style={{
+                  gridTemplateColumns: `repeat(${monthlyMilestones.length}, minmax(18px, 1fr))`
+                }}
+                aria-hidden="true"
+              >
+                {monthlyMilestones.map((month) => (
+                  <span className="metrics-projection-bar-track" key={month}>
+                    <span
+                      className="metrics-projection-bar-stack"
+                      style={{
+                        height: `${monthsToTarget > 0 ? (month / monthsToTarget) * 100 : 0}%`
+                      }}
+                    >
+                      <span
+                        className="metrics-projection-product-layer product-l2l"
+                        style={{ height: "100%" }}
+                      />
+                    </span>
+                  </span>
+                ))}
+              </div>
+              <div
+                className={`metrics-projection-axis${axisMilestones.length === 1 ? " single" : ""}`}
+                aria-hidden="true"
+              >
+                {axisMilestones.map((month) => (
+                  <span key={month}>{formatMonths(month)}</span>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
           <div
             className="metrics-product-selector"
             role="group"
@@ -511,11 +548,6 @@ function ProjectedSavings({
                 onClick={() => setSelectedProductIndex(index)}
               >
                 <strong>{product.shortName}</strong>
-                <small>
-                  {product.current
-                    ? "Current"
-                    : `+${wholeNumber.format(product.contribution)}h`}
-                </small>
               </button>
             ))}
           </div>
