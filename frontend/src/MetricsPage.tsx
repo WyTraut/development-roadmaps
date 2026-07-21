@@ -8,6 +8,7 @@ import {
   Database,
   ExternalLink,
   FileText,
+  Info,
   Layers3,
   Plane,
   ScanText,
@@ -17,7 +18,7 @@ import {
   X,
   type LucideIcon
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import type { MetricsEvidence, MetricsSnapshot } from "./types";
 
@@ -115,11 +116,14 @@ function MetricsSourceSection({
             icon={ScanText}
             label="Scrubs"
             value={wholeNumber.format(snapshot.total_scrubs)}
+            helpText="A process where network technicians gather information and verify logistical and network standards. It is crucial to preventing HEOs and failures while significantly reducing activation times."
           />
           <EvidenceMetric
             icon={Database}
             label="Warehouse queries"
             value={wholeNumber.format(snapshot.warehouse_lookups)}
+            helpText="The number of times the tool checks Warehouse order records to confirm equipment, location, and activation details."
+            helpAlign="right"
           />
           <EvidenceMetric
             icon={UsersRound}
@@ -143,20 +147,77 @@ function MetricsSourceSection({
 function EvidenceMetric({
   icon: Icon,
   label,
-  value
+  value,
+  helpText,
+  helpAlign = "left"
 }: {
   icon: LucideIcon;
   label: string;
   value: string;
+  helpText?: string;
+  helpAlign?: "left" | "right";
 }) {
   return (
     <div className="metrics-summary-card">
       <span className="metrics-summary-icon" aria-hidden="true">
         <Icon size={19} />
       </span>
-      <span className="metrics-summary-label">{label}</span>
+      <div className="metrics-summary-label-row">
+        <span className="metrics-summary-label">{label}</span>
+        {helpText ? <MetricInfo align={helpAlign} label={label} text={helpText} /> : null}
+      </div>
       <strong>{value}</strong>
     </div>
+  );
+}
+
+function MetricInfo({
+  align,
+  label,
+  text
+}: {
+  align: "left" | "right";
+  label: string;
+  text: string;
+}) {
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const tooltipId = useId();
+  const open = hovered || focused;
+
+  return (
+    <span
+      className="metrics-info"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <button
+        className="metrics-info-button"
+        type="button"
+        aria-label={`About ${label}`}
+        aria-describedby={open ? tooltipId : undefined}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") {
+            setHovered(false);
+            setFocused(false);
+            event.currentTarget.blur();
+          }
+        }}
+      >
+        <Info aria-hidden="true" size={13} />
+      </button>
+      {open ? (
+        <span
+          className={`metrics-info-tooltip align-${align}`}
+          id={tooltipId}
+          role="tooltip"
+        >
+          {text}
+        </span>
+      ) : null}
+    </span>
   );
 }
 

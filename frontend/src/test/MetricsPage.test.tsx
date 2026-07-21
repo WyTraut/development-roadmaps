@@ -134,6 +134,28 @@ describe("MetricsPage", () => {
     expect(trigger).toHaveFocus();
   });
 
+  it("explains scrubs and Warehouse queries on hover and keyboard focus", async () => {
+    const user = userEvent.setup();
+    render(<MetricsPage evidence={evidence} />);
+
+    const scrubsInfo = screen.getByRole("button", { name: "About Scrubs" });
+    await user.hover(scrubsInfo);
+    expect(screen.getByRole("tooltip")).toHaveTextContent(
+      "A process where network technicians gather information and verify logistical and network standards. It is crucial to preventing HEOs and failures while significantly reducing activation times."
+    );
+    await user.unhover(scrubsInfo);
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+
+    const warehouseInfo = screen.getByRole("button", { name: "About Warehouse queries" });
+    await user.click(warehouseInfo);
+    expect(warehouseInfo).toHaveFocus();
+    expect(screen.getByRole("tooltip")).toHaveTextContent(
+      "The number of times the tool checks Warehouse order records to confirm equipment, location, and activation details."
+    );
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+  });
+
   it("projects the observed average across 800 orders", () => {
     render(<MetricsPage evidence={evidenceWithProjection(6000, 100)} />);
 
