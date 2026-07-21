@@ -282,6 +282,7 @@ function SystemAggregation({
       className="metrics-aggregation-section"
       aria-label={`Systems aggregated by ${productName}`}
     >
+      <p className="metrics-aggregation-caption">Sources aggregated through automation</p>
       <div
         className="metrics-aggregation-graphic"
         role="group"
