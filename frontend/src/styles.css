@@ -3046,7 +3046,8 @@ main.screen-metrics {
 }
 
 .metrics-projection-visual,
-.metrics-projection-plot {
+.metrics-projection-plot,
+.metrics-expansion-contribution-plot {
   display: grid;
   gap: 8px;
 }
@@ -3115,6 +3116,42 @@ main.screen-metrics {
   justify-content: flex-end;
 }
 
+.metrics-expansion-contributions {
+  display: grid;
+  align-items: end;
+  gap: 6px;
+}
+
+.metrics-expansion-contribution {
+  display: grid;
+  min-width: 0;
+  grid-template-rows: 16px 82px;
+  gap: 4px;
+  text-align: center;
+}
+
+.metrics-expansion-contribution > strong {
+  color: var(--ink);
+  font-size: 0.68rem;
+  line-height: 1;
+}
+
+.metrics-expansion-contribution-track {
+  display: flex;
+  height: 82px;
+  align-items: flex-end;
+  border-bottom: 1px solid #aeb9b7;
+}
+
+.metrics-expansion-contribution-bar {
+  display: block;
+  width: 100%;
+  min-height: 7px;
+  border-radius: 3px 3px 0 0;
+  background: var(--product-color);
+  transition: height 180ms ease;
+}
+
 .metrics-product-selector {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -3124,8 +3161,8 @@ main.screen-metrics {
 
 .metrics-product-option {
   min-width: 0;
-  min-height: 46px;
-  padding: 7px 5px 6px;
+  min-height: 40px;
+  padding: 8px 5px 7px;
   border: 1px solid #cbd2d1;
   border-radius: 4px;
   background: #ffffff;
@@ -3152,29 +3189,18 @@ main.screen-metrics {
   outline-offset: 2px;
 }
 
-.metrics-product-option strong,
-.metrics-product-option small {
+.metrics-product-option strong {
   display: block;
   overflow-wrap: anywhere;
-}
-
-.metrics-product-option strong {
   color: inherit;
   font-size: 0.72rem;
   line-height: 1.15;
 }
 
-.metrics-product-option small {
-  margin-top: 3px;
-  color: var(--subtle);
-  font-size: 0.64rem;
-  font-weight: 650;
-  line-height: 1;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .metrics-projection-bar-stack,
   .metrics-projection-product-layer,
+  .metrics-expansion-contribution-bar,
   .metrics-product-option {
     transition: none;
   }
@@ -3527,22 +3553,34 @@ main.screen-metrics {
     height: 72px;
   }
 
+  .metrics-expansion-contributions {
+    gap: 5px;
+  }
+
+  .metrics-expansion-contribution {
+    grid-template-rows: 14px 72px;
+    gap: 3px;
+  }
+
+  .metrics-expansion-contribution > strong {
+    font-size: 0.6rem;
+  }
+
+  .metrics-expansion-contribution-track {
+    height: 72px;
+  }
+
   .metrics-product-selector {
     gap: 4px;
   }
 
   .metrics-product-option {
-    min-height: 52px;
-    padding: 7px 3px 5px;
+    min-height: 42px;
+    padding: 7px 3px 6px;
   }
 
   .metrics-product-option strong {
     font-size: 0.62rem;
-  }
-
-  .metrics-product-option small {
-    font-size: 0.58rem;
-    line-height: 1.1;
   }
 
   .brand-mark {
