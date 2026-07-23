@@ -2736,13 +2736,14 @@ main.screen-metrics {
   --cluster-color: #2f6f8f;
   display: grid;
   min-width: 0;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   align-content: start;
-  gap: 5px;
+  gap: 10px;
   padding: 0;
   border: 0;
   background: transparent;
   cursor: pointer;
+  text-align: left;
   transition: opacity 160ms ease, transform 160ms ease;
 }
 
@@ -2771,6 +2772,8 @@ main.screen-metrics {
 }
 
 .report-universe-cluster.is-active {
+  position: relative;
+  z-index: 2;
   transform: translateY(-3px);
 }
 
@@ -2783,6 +2786,23 @@ main.screen-metrics {
   outline-offset: 5px;
 }
 
+.report-universe-cluster-label {
+  display: flex;
+  min-height: 2.3em;
+  align-items: flex-end;
+  color: var(--ink);
+  font-size: 0.72rem;
+  font-weight: 720;
+  line-height: 1.15;
+}
+
+.report-universe-cluster-tiles {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 5px;
+}
+
 .report-universe-tile {
   display: block;
   min-width: 0;
@@ -2790,6 +2810,7 @@ main.screen-metrics {
   border-radius: 2px;
   background: var(--cluster-color);
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 24%);
+  cursor: help;
   transition: box-shadow 160ms ease;
 }
 
@@ -3848,6 +3869,15 @@ main.screen-metrics {
   }
 
   .report-universe-cluster {
+    gap: 8px;
+  }
+
+  .report-universe-cluster-label {
+    min-height: 2.4em;
+    font-size: 0.66rem;
+  }
+
+  .report-universe-cluster-tiles {
     gap: 3px;
   }
 
