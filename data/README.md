@@ -7,7 +7,7 @@ The application reads `roadmaps.yaml` at startup and whenever the file changes. 
 - `portfolio` controls the page title, planning period, currency, and visible source note.
 - `defaults` sets the opening stage for each roadmap and the opening delivery mode.
 - `metrics_sources` identifies aggregate evidence sources and their value assumptions, such as minutes saved per warehouse query, baked into the static site during deployment.
-- `reporting_suite_source` identifies the private codebase used to derive Reporting Suite capability counts during deployment.
+- `reporting_suite_source` identifies the private codebase used to derive Reporting Suite capability counts during deployment. Its checked-in aggregate snapshot keeps the public build available when cross-repository access is unavailable.
 - `work_packages` contains the atomic cost, duration, staffing, effort, dependency, confidence, and risk estimates.
 - `roadmaps` maps cumulative Foundation, Scale, and Full Vision stages to work-package IDs.
 - `assumptions` appears in the Assumptions view and printed report.

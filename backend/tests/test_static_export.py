@@ -32,6 +32,10 @@ def repository_file_loader(_: object, path: str, __: object) -> str:
     return (REPORTING_SUITE_FIXTURES / fixture_name).read_text(encoding="utf-8")
 
 
+def unavailable_repository_file_loader(*_: object) -> str:
+    raise MetricsExportError("repository unavailable")
+
+
 def test_static_export_contains_every_scenario() -> None:
     bundle = build_static_bundle(
         ROOT / "data" / "roadmaps.yaml",
@@ -108,6 +112,21 @@ def test_reporting_suite_parser_derives_capabilities_from_source() -> None:
         (workspace.name, workspace.active_views)
         for workspace in snapshot.workspaces
     ] == [("Operations", 2), ("FIT", 1)]
+
+
+def test_static_export_uses_code_snapshot_when_private_repo_is_unavailable() -> None:
+    with pytest.warns(RuntimeWarning, match="checked-in code-derived snapshot"):
+        bundle = build_static_bundle(
+            ROOT / "data" / "roadmaps.yaml",
+            github_token="test-token",
+            issue_body_loader=issue_body_loader,
+            repository_file_loader=unavailable_repository_file_loader,
+        )
+
+    reporting_suite = bundle["metrics"]["reporting_suite"]
+    assert reporting_suite["active_views"] == 47
+    assert reporting_suite["api_capabilities"] == 156
+    assert reporting_suite["source_ref"] == "7ebd7db"
 
 
 def test_static_export_requires_token_for_private_metrics_source() -> None:

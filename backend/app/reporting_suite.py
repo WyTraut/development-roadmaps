@@ -4,8 +4,10 @@ import ast
 import base64
 import json
 import re
+import warnings
 from collections import Counter
 from collections.abc import Callable
+from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote
 from urllib.request import Request, urlopen
@@ -75,30 +77,39 @@ def build_reporting_suite_snapshot(
     source: ReportingSuiteSource | None,
     github_token: str | None,
     repository_file_loader: RepositoryFileLoader = fetch_github_repository_file,
+    fallback_snapshot: ReportingSuiteSnapshot | None = None,
 ) -> ReportingSuiteSnapshot | None:
     if source is None:
         return None
     if source.requires_auth and not github_token:
+        if fallback_snapshot is not None:
+            _warn_fallback(source)
+            return fallback_snapshot
         raise MetricsExportError(
             "METRICS_GITHUB_TOKEN is required to export private Reporting Suite "
             f"source '{source.id}'"
         )
 
     files: dict[str, str] = {}
-    for path in (
-        source.page_registry_path,
-        source.server_path,
-        source.database_path,
-    ):
-        try:
+    try:
+        for path in (
+            source.page_registry_path,
+            source.server_path,
+            source.database_path,
+        ):
             files[path] = repository_file_loader(source, path, github_token)
-        except MetricsExportError:
-            raise
-        except Exception as exc:
-            raise MetricsExportError(
-                f"Reporting Suite source '{source.id}' file '{path}' "
-                f"could not be loaded: {exc}"
-            ) from exc
+    except MetricsExportError:
+        if fallback_snapshot is not None:
+            _warn_fallback(source)
+            return fallback_snapshot
+        raise
+    except Exception as exc:
+        if fallback_snapshot is not None:
+            _warn_fallback(source)
+            return fallback_snapshot
+        raise MetricsExportError(
+            f"Reporting Suite source '{source.id}' could not be loaded: {exc}"
+        ) from exc
 
     return parse_reporting_suite_source(
         source,
@@ -106,6 +117,17 @@ def build_reporting_suite_snapshot(
         server_text=files[source.server_path],
         database_text=files[source.database_path],
     )
+
+
+def load_reporting_suite_snapshot(path: Path) -> ReportingSuiteSnapshot:
+    try:
+        return ReportingSuiteSnapshot.model_validate_json(
+            path.read_text(encoding="utf-8")
+        )
+    except (OSError, ValueError) as exc:
+        raise MetricsExportError(
+            f"Reporting Suite fallback snapshot '{path}' could not be loaded"
+        ) from exc
 
 
 def parse_reporting_suite_source(
@@ -215,3 +237,12 @@ def _schedule_counts(server_tree: ast.AST) -> tuple[int, int]:
                     steps += len(value.elts)
         return workflows, steps
     return (0, 0)
+
+
+def _warn_fallback(source: ReportingSuiteSource) -> None:
+    warnings.warn(
+        f"Reporting Suite source '{source.id}' is unavailable; using the "
+        "checked-in code-derived snapshot.",
+        RuntimeWarning,
+        stacklevel=2,
+    )
