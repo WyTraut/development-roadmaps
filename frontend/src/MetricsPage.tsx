@@ -3,7 +3,6 @@ import {
   ArrowRight,
   BarChart3,
   CalendarDays,
-  ChevronDown,
   Clock3,
   Cloud,
   Database,
@@ -33,9 +32,9 @@ const wholeNumber = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 })
 const oneDecimalNumber = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
 const projectionOrderTarget = 800;
 export type MetricsView = "activations" | "reporting-suite";
-const metricsViews: Array<{ id: MetricsView; label: string; icon: LucideIcon }> = [
-  { id: "activations", label: "Activations Scrub Tool", icon: ScanText },
-  { id: "reporting-suite", label: "Reporting Suite", icon: BarChart3 }
+const metricsViews: Array<{ id: MetricsView; label: string }> = [
+  { id: "activations", label: "Activations Scrub Tool" },
+  { id: "reporting-suite", label: "Reporting Suite" }
 ];
 const expansionProducts = [
   { id: "zero-touch", name: "Zero Touches", shortName: "Zero Touches", hours: 500 },
@@ -168,6 +167,9 @@ function MetricsPageHeader({
 }) {
   const activationsSnapshot = evidence.sources[0];
   const reportingSuiteSnapshot = evidence.reporting_suite;
+  const alternateView = selectedView === "activations" ? "reporting-suite" : "activations";
+  const alternateLabel = metricsViews.find((view) => view.id === alternateView)?.label
+    ?? "Metrics";
 
   return (
     <header className="metrics-source-header metrics-page-header">
@@ -175,19 +177,16 @@ function MetricsPageHeader({
         {selectedView === "reporting-suite" ? (
           <span className="section-kicker">Code-derived capability</span>
         ) : null}
-        <div className="metrics-title-selector">
+        <div className="metrics-title-switch">
           <h1 id="metrics-page-heading">{selectedTitle}</h1>
-          <ChevronDown aria-hidden="true" size={22} strokeWidth={2} />
-          <select
-            aria-label="Metrics page"
-            value={selectedView}
-            onChange={(event) => onSelectView(event.target.value as MetricsView)}
-            title="Switch metrics page"
+          <button
+            className="metrics-title-switch-button"
+            type="button"
+            onClick={() => onSelectView(alternateView)}
           >
-            {metricsViews.map(({ id, label }) => (
-              <option value={id} key={id}>{label}</option>
-            ))}
-          </select>
+            Switch to {alternateLabel}
+            <ArrowRight aria-hidden="true" size={15} />
+          </button>
         </div>
       </div>
       {selectedView === "reporting-suite" ? (
