@@ -192,7 +192,22 @@ describe("MetricsPage", () => {
     const universe = screen.getByRole("region", { name: "Report Universe" });
     expect(within(universe).getByText("175 report pages")).toBeVisible();
     expect(within(universe).getAllByTestId("report-universe-cluster")).toHaveLength(7);
-    expect(within(universe).getAllByTestId("report-universe-tile")).toHaveLength(175);
+    const universeTiles = within(universe).getAllByTestId("report-universe-tile");
+    expect(universeTiles).toHaveLength(175);
+    for (const category of [
+      "Activations",
+      "Project Management",
+      "Operations",
+      "Performance",
+      "Quality",
+      "Planning",
+      "Leadership"
+    ]) {
+      expect(within(universe).getByText(category)).toBeVisible();
+    }
+    expect(universeTiles[0]).toHaveAttribute("data-report-label", "KPI Summary");
+    expect(universeTiles[1]).toHaveAttribute("data-report-label", "WIP Report");
+    expect(universeTiles[24]).toHaveAttribute("data-report-label", "Progress Tracker");
     for (const cluster of within(universe).getAllByTestId("report-universe-cluster")) {
       expect(within(cluster).getAllByTestId("report-universe-tile")).toHaveLength(25);
     }
@@ -209,7 +224,7 @@ describe("MetricsPage", () => {
     expect(screen.getByLabelText("Activations Scrub Tool aggregate summary")).not.toBeVisible();
   });
 
-  it("distributes anonymous report tiles without exposing internal details", () => {
+  it("distributes generically labeled report tiles without exposing internal details", () => {
     const { rerender } = render(
       <MetricsPage evidence={evidenceWithReportViews(10)} activeView="reporting-suite" />
     );
@@ -224,15 +239,14 @@ describe("MetricsPage", () => {
     ).toEqual([2, 2, 2, 1, 1, 1, 1]);
 
     for (const internalLabel of [
-      "Operations",
       "FIT",
       "Hub",
       "Offnet",
-      "Tools",
       "Admin",
       "Manager Views",
       "Slider",
-      "FlightDeck"
+      "FlightDeck",
+      "Macias"
     ]) {
       expect(within(universe).queryByText(internalLabel)).not.toBeInTheDocument();
     }
@@ -262,10 +276,13 @@ describe("MetricsPage", () => {
     expect(clusters[2]).toHaveClass("is-active");
     expect(clusters[0]).toHaveClass("is-muted");
     expect(clusters[1]).toHaveClass("is-muted");
+    await user.hover(within(clusters[2]).getAllByTestId("report-universe-tile")[1]);
+    expect(within(universe).getByText("Operations · WIP Report")).toBeVisible();
 
     await user.unhover(clusters[2]);
     expect(clusters[2]).not.toHaveClass("is-active");
     expect(clusters[0]).not.toHaveClass("is-muted");
+    expect(within(universe).getByText("175 report pages")).toBeVisible();
 
     fireEvent.focus(clusters[4]);
     expect(clusters[4]).toHaveClass("is-active");

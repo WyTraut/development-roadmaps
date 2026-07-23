@@ -35,7 +35,42 @@ const compactNumber = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 1
 });
 const projectionOrderTarget = 800;
-const reportUniverseClusterLimit = 7;
+const reportUniverseClusterLabels = [
+  "Activations",
+  "Project Management",
+  "Operations",
+  "Performance",
+  "Quality",
+  "Planning",
+  "Leadership"
+];
+const genericReportLabels = [
+  "KPI Summary",
+  "WIP Report",
+  "Daily Overview",
+  "Weekly Trend",
+  "Monthly Scorecard",
+  "Volume Report",
+  "Aging View",
+  "Status Summary",
+  "Forecast View",
+  "Exception Report",
+  "Quality Review",
+  "Capacity Report",
+  "Backlog View",
+  "Completion Trend",
+  "Milestone Report",
+  "Risk Overview",
+  "Performance View",
+  "Queue Summary",
+  "Delivery Report",
+  "Activity Trend",
+  "Plan vs. Actual",
+  "Executive Summary",
+  "Team Dashboard",
+  "Health Check",
+  "Progress Tracker"
+];
 export type MetricsView = "activations" | "reporting-suite";
 const metricsViews: Array<{ id: MetricsView; label: string }> = [
   { id: "activations", label: "Activations Scrub Tool" },
@@ -125,7 +160,7 @@ function buildCumulativeMonthlyViews(
 
 function buildReportUniverseClusters(reportViews: number): number[] {
   const tileCount = Math.max(0, Math.floor(reportViews));
-  const clusterCount = Math.min(reportUniverseClusterLimit, tileCount);
+  const clusterCount = Math.min(reportUniverseClusterLabels.length, tileCount);
   if (clusterCount === 0) return [];
 
   const tilesPerCluster = Math.floor(tileCount / clusterCount);
@@ -134,6 +169,12 @@ function buildReportUniverseClusters(reportViews: number): number[] {
     { length: clusterCount },
     (_, index) => tilesPerCluster + (index < remainder ? 1 : 0)
   );
+}
+
+function genericReportLabel(tileIndex: number): string {
+  const label = genericReportLabels[tileIndex % genericReportLabels.length];
+  const sequence = Math.floor(tileIndex / genericReportLabels.length) + 1;
+  return sequence === 1 ? label : `${label} ${sequence}`;
 }
 
 export default function MetricsPage({
@@ -399,6 +440,7 @@ function ReportUniverse({ reportViews }: { reportViews: number }) {
   const clusters = buildReportUniverseClusters(reportViews);
   const [hoveredCluster, setHoveredCluster] = useState<number | null>(null);
   const [focusedCluster, setFocusedCluster] = useState<number | null>(null);
+  const [hoveredReport, setHoveredReport] = useState<string | null>(null);
   const activeCluster = hoveredCluster ?? focusedCluster;
   if (clusters.length === 0) return null;
 
@@ -409,8 +451,13 @@ function ReportUniverse({ reportViews }: { reportViews: number }) {
     >
       <header>
         <h2 id="report-universe-heading">Report Universe</h2>
-        <span>
-          {wholeNumber.format(reportViews)} {reportViews === 1 ? "report page" : "report pages"}
+        <span aria-live="polite">
+          {hoveredReport ?? (
+            <>
+              {wholeNumber.format(reportViews)}{" "}
+              {reportViews === 1 ? "report page" : "report pages"}
+            </>
+          )}
         </span>
       </header>
       <div
@@ -430,22 +477,37 @@ function ReportUniverse({ reportViews }: { reportViews: number }) {
             }`}
             data-testid="report-universe-cluster"
             type="button"
-            aria-label={`Highlight anonymous reporting group ${clusterIndex + 1}`}
+            aria-label={`${reportUniverseClusterLabels[clusterIndex]} report group`}
             onMouseEnter={() => setHoveredCluster(clusterIndex)}
-            onMouseLeave={() => setHoveredCluster(null)}
+            onMouseLeave={() => {
+              setHoveredCluster(null);
+              setHoveredReport(null);
+            }}
             onFocus={() => setFocusedCluster(clusterIndex)}
             onBlur={() => setFocusedCluster(null)}
             onClick={() => setFocusedCluster(clusterIndex)}
             key={clusterIndex}
           >
-            {Array.from({ length: tileCount }, (_, tileIndex) => (
-              <span
-                className="report-universe-tile"
-                data-testid="report-universe-tile"
-                aria-hidden="true"
-                key={tileIndex}
-              />
-            ))}
+            <span className="report-universe-cluster-label" aria-hidden="true">
+              {reportUniverseClusterLabels[clusterIndex]}
+            </span>
+            <span className="report-universe-cluster-tiles" aria-hidden="true">
+              {Array.from({ length: tileCount }, (_, tileIndex) => {
+                const reportLabel = genericReportLabel(tileIndex);
+                return (
+                  <span
+                    className="report-universe-tile"
+                    data-report-label={reportLabel}
+                    data-testid="report-universe-tile"
+                    onMouseEnter={() => setHoveredReport(
+                      `${reportUniverseClusterLabels[clusterIndex]} · ${reportLabel}`
+                    )}
+                    onMouseLeave={() => setHoveredReport(null)}
+                    key={tileIndex}
+                  />
+                );
+              })}
+            </span>
           </button>
         ))}
       </div>
