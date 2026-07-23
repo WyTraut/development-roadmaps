@@ -139,12 +139,10 @@ describe("MetricsPage", () => {
     const user = userEvent.setup();
     render(<MetricsPage evidence={evidence} />);
 
-    await user.click(screen.getByRole("tab", { name: "Reporting Suite" }));
+    const selector = screen.getByRole("combobox", { name: "Metrics page" });
+    await user.selectOptions(selector, "reporting-suite");
 
-    expect(screen.getByRole("tab", { name: "Reporting Suite" })).toHaveAttribute(
-      "aria-selected",
-      "true"
-    );
+    expect(selector).toHaveValue("reporting-suite");
     expect(screen.getByRole("heading", { name: "Reporting Suite" })).toBeVisible();
     const summary = screen.getByLabelText("Reporting Suite code capability summary");
     expect(within(summary).getByText("Active views")).toBeVisible();
@@ -173,7 +171,10 @@ describe("MetricsPage", () => {
     const user = userEvent.setup();
     render(<MetricsPage evidence={{ sources: evidence.sources }} />);
 
-    await user.click(screen.getByRole("tab", { name: "Reporting Suite" }));
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "Metrics page" }),
+      "reporting-suite"
+    );
 
     expect(screen.getByRole("heading", { name: "Reporting Suite" })).toBeVisible();
     expect(screen.getByText("No code metrics available.")).toBeVisible();

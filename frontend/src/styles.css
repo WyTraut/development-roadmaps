@@ -2560,40 +2560,44 @@ main.screen-metrics {
   padding-top: 40px;
 }
 
-.metrics-view-tabs {
-  display: inline-grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 3px;
-  margin-bottom: 28px;
-  padding: 3px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: var(--surface-soft);
-}
-
-.metrics-view-tabs button {
-  display: inline-flex;
-  min-height: 40px;
+.metrics-title-selector {
+  position: relative;
+  display: flex;
+  width: fit-content;
+  max-width: 100%;
   align-items: center;
-  justify-content: center;
-  gap: 7px;
-  padding: 7px 14px;
-  border: 0;
+  gap: 8px;
   border-radius: 4px;
-  background: transparent;
-  color: var(--muted);
   cursor: pointer;
-  font-weight: 680;
 }
 
-.metrics-view-tabs button:hover {
+.metrics-title-selector h1 {
+  margin: 5px 0 0;
+}
+
+.metrics-title-selector svg {
+  flex: 0 0 auto;
+  margin-top: 6px;
+  color: var(--subtle);
+}
+
+.metrics-title-selector select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.metrics-title-selector:hover svg {
   color: var(--ink);
 }
 
-.metrics-view-tabs button.active {
-  background: var(--surface);
-  color: var(--ink);
-  box-shadow: 0 1px 4px rgba(23, 32, 43, 0.12);
+.metrics-title-selector:focus-within {
+  outline: 3px solid var(--focus);
+  outline-offset: 5px;
 }
 
 .metrics-empty-state {
@@ -3650,17 +3654,12 @@ main.screen-metrics {
     padding-top: 30px;
   }
 
-  .metrics-view-tabs {
-    display: grid;
-    width: 100%;
-    margin-bottom: 24px;
+  .metrics-title-selector {
+    width: fit-content;
   }
 
-  .metrics-view-tabs button {
-    min-width: 0;
-    padding-right: 8px;
-    padding-left: 8px;
-    font-size: 0.8rem;
+  .metrics-title-selector h1 {
+    overflow-wrap: anywhere;
   }
 
   .metrics-source-header {
