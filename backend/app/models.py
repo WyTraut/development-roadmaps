@@ -121,6 +121,18 @@ class MetricsSource(BaseModel):
     purpose: str
 
 
+class ReportingSuiteSource(BaseModel):
+    id: str = Field(pattern=r"^[a-z][a-z0-9_]*$")
+    name: str
+    repository: str = Field(pattern=r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
+    ref: str = Field(default="main", pattern=r"^[A-Za-z0-9_./-]+$")
+    requires_auth: bool = True
+    page_registry_path: str = "shared/page_registry.json"
+    server_path: str = "server.py"
+    database_path: str = "shared/db.py"
+    purpose: str
+
+
 class PortfolioConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -130,6 +142,7 @@ class PortfolioConfig(BaseModel):
     work_packages: List[WorkPackage]
     roadmaps: List[Roadmap]
     metrics_sources: List[MetricsSource] = Field(default_factory=list)
+    reporting_suite_source: ReportingSuiteSource | None = None
     assumptions: List[str] = Field(min_length=1)
 
     @model_validator(mode="after")
@@ -223,8 +236,30 @@ class MetricsSnapshot(BaseModel):
     privacy_note: str
 
 
+class ReportingSuiteWorkspaceMetric(BaseModel):
+    name: str
+    active_views: int = Field(ge=0)
+
+
+class ReportingSuiteSnapshot(BaseModel):
+    id: str
+    name: str
+    source_url: str
+    source_ref: str
+    purpose: str
+    registered_views: int = Field(ge=0)
+    active_views: int = Field(ge=0)
+    api_capabilities: int = Field(ge=0)
+    data_tables: int = Field(ge=0)
+    automation_steps: int = Field(ge=0)
+    scheduled_workflows: int = Field(ge=0)
+    workspaces: List[ReportingSuiteWorkspaceMetric]
+    source_note: str
+
+
 class MetricsEvidence(BaseModel):
     sources: List[MetricsSnapshot] = Field(default_factory=list)
+    reporting_suite: ReportingSuiteSnapshot | None = None
 
 
 class PortfolioResponse(BaseModel):

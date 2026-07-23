@@ -21,12 +21,21 @@ import {
 } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 
-import type { MetricsEvidence, MetricsSnapshot } from "./types";
+import type {
+  MetricsEvidence,
+  MetricsSnapshot,
+  ReportingSuiteSnapshot
+} from "./types";
 
 
 const wholeNumber = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 const oneDecimalNumber = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
 const projectionOrderTarget = 800;
+export type MetricsView = "activations" | "reporting-suite";
+const metricsViews: Array<{ id: MetricsView; label: string; icon: LucideIcon }> = [
+  { id: "activations", label: "Activations Scrub Tool", icon: ScanText },
+  { id: "reporting-suite", label: "Reporting Suite", icon: BarChart3 }
+];
 const expansionProducts = [
   { id: "zero-touch", name: "Zero Touches", shortName: "Zero Touches", hours: 500 },
   { id: "sdwan", name: "SD-WAN new installs", shortName: "SD-WAN", hours: 1000 },
@@ -83,21 +92,222 @@ function formatDatePart(timestamp: string): string {
   }).format(date);
 }
 
-export default function MetricsPage({ evidence }: { evidence: MetricsEvidence }) {
+export default function MetricsPage({
+  evidence,
+  activeView,
+  onViewChange
+}: {
+  evidence: MetricsEvidence;
+  activeView?: MetricsView;
+  onViewChange?: (view: MetricsView) => void;
+}) {
+  const [localView, setLocalView] = useState<MetricsView>("activations");
+  const selectedView = activeView ?? localView;
+
+  function selectView(view: MetricsView) {
+    if (activeView === undefined) setLocalView(view);
+    onViewChange?.(view);
+  }
+
+  function handleViewKeyDown(
+    event: React.KeyboardEvent<HTMLButtonElement>,
+    index: number
+  ) {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    event.preventDefault();
+    const direction = event.key === "ArrowRight" ? 1 : -1;
+    const nextIndex = (index + direction + metricsViews.length) % metricsViews.length;
+    const nextView = metricsViews[nextIndex].id;
+    selectView(nextView);
+    document.getElementById(`metrics-tab-${nextView}`)?.focus();
+  }
+
   return (
     <section className="metrics-evidence" aria-label="Operational impact metrics">
-      {evidence.sources.length === 0 ? (
-        <div className="metrics-empty-state" role="status">
-          <BarChart3 aria-hidden="true" size={30} />
-          <h1>Metrics</h1>
-          <p>No metrics available.</p>
-        </div>
-      ) : (
-        evidence.sources.map((snapshot, index) => (
-          <MetricsSourceSection key={snapshot.id} snapshot={snapshot} primary={index === 0} />
-        ))
-      )}
+      <nav className="metrics-view-tabs" role="tablist" aria-label="Metrics views">
+        {metricsViews.map(({ id, label, icon: Icon }, index) => (
+          <button
+            id={`metrics-tab-${id}`}
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={selectedView === id}
+            aria-controls={`metrics-panel-${id}`}
+            tabIndex={selectedView === id ? 0 : -1}
+            className={selectedView === id ? "active" : ""}
+            onClick={() => selectView(id)}
+            onKeyDown={(event) => handleViewKeyDown(event, index)}
+          >
+            <Icon aria-hidden="true" size={17} />
+            {label}
+          </button>
+        ))}
+      </nav>
+
+      <div
+        id="metrics-panel-activations"
+        role="tabpanel"
+        aria-labelledby="metrics-tab-activations"
+        hidden={selectedView !== "activations"}
+      >
+        {evidence.sources.length === 0 ? (
+          <MetricsEmptyState title="Metrics" message="No metrics available." />
+        ) : (
+          evidence.sources.map((snapshot, index) => (
+            <MetricsSourceSection key={snapshot.id} snapshot={snapshot} primary={index === 0} />
+          ))
+        )}
+      </div>
+
+      <div
+        id="metrics-panel-reporting-suite"
+        role="tabpanel"
+        aria-labelledby="metrics-tab-reporting-suite"
+        hidden={selectedView !== "reporting-suite"}
+      >
+        {evidence.reporting_suite ? (
+          <ReportingSuitePage snapshot={evidence.reporting_suite} />
+        ) : (
+          <MetricsEmptyState title="Reporting Suite" message="No code metrics available." />
+        )}
+      </div>
     </section>
+  );
+}
+
+function MetricsEmptyState({ title, message }: { title: string; message: string }) {
+  return (
+    <div className="metrics-empty-state" role="status">
+      <BarChart3 aria-hidden="true" size={30} />
+      <h1>{title}</h1>
+      <p>{message}</p>
+    </div>
+  );
+}
+
+function ReportingSuitePage({ snapshot }: { snapshot: ReportingSuiteSnapshot }) {
+  const maximumWorkspaceViews = Math.max(
+    1,
+    ...snapshot.workspaces.map((workspace) => workspace.active_views)
+  );
+  const workspaceSummary = snapshot.workspaces
+    .map((workspace) => `${workspace.name}: ${workspace.active_views}`)
+    .join(", ");
+
+  return (
+    <article
+      className="metrics-source-section reporting-suite-section"
+      aria-labelledby={`metrics-source-${snapshot.id}`}
+    >
+      <header className="metrics-source-header">
+        <div>
+          <span className="section-kicker">Code-derived capability</span>
+          <h1 id={`metrics-source-${snapshot.id}`}>{snapshot.name}</h1>
+        </div>
+        <div className="metrics-source-meta">
+          <span>Source {snapshot.source_ref}</span>
+          <a
+            className="metrics-source-link"
+            href={snapshot.source_url}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={`View source code for ${snapshot.name}`}
+            title="View source repository"
+          >
+            <ExternalLink aria-hidden="true" size={18} />
+          </a>
+        </div>
+      </header>
+
+      <section
+        className="reporting-suite-kpis"
+        aria-label={`${snapshot.name} code capability summary`}
+      >
+        <div className="reporting-suite-primary-kpi">
+          <span className="reporting-suite-kpi-icon" aria-hidden="true">
+            <AppWindow size={22} />
+          </span>
+          <span>Active views</span>
+          <strong>{wholeNumber.format(snapshot.active_views)}</strong>
+          <small>of {wholeNumber.format(snapshot.registered_views)} registered</small>
+        </div>
+        <div className="reporting-suite-kpi-grid">
+          <ReportingSuiteKpi
+            icon={Layers3}
+            label="API capabilities"
+            value={snapshot.api_capabilities}
+          />
+          <ReportingSuiteKpi
+            icon={Database}
+            label="Data tables"
+            value={snapshot.data_tables}
+          />
+          <ReportingSuiteKpi
+            icon={ListChecks}
+            label="Automation steps"
+            value={snapshot.automation_steps}
+            detail={`${snapshot.scheduled_workflows} scheduled workflows`}
+          />
+        </div>
+      </section>
+
+      <section
+        className="reporting-suite-workspaces"
+        aria-labelledby="reporting-suite-workspaces-heading"
+      >
+        <header>
+          <h2 id="reporting-suite-workspaces-heading">Active views by workspace</h2>
+          <strong>{wholeNumber.format(snapshot.active_views)} total</strong>
+        </header>
+        <div
+          className="reporting-suite-workspace-chart"
+          role="img"
+          aria-label={`Active views by workspace. ${workspaceSummary}`}
+        >
+          {snapshot.workspaces.map((workspace) => (
+            <div className="reporting-suite-workspace-row" key={workspace.name}>
+              <span>{workspace.name}</span>
+              <span className="reporting-suite-workspace-track" aria-hidden="true">
+                <span
+                  style={{
+                    width: `${(workspace.active_views / maximumWorkspaceViews) * 100}%`
+                  }}
+                />
+              </span>
+              <strong>{wholeNumber.format(workspace.active_views)}</strong>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <p className="reporting-suite-source-note">
+        <Info aria-hidden="true" size={16} />
+        {snapshot.source_note}
+      </p>
+    </article>
+  );
+}
+
+function ReportingSuiteKpi({
+  icon: Icon,
+  label,
+  value,
+  detail
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: number;
+  detail?: string;
+}) {
+  return (
+    <div className="reporting-suite-kpi">
+      <span className="reporting-suite-kpi-icon" aria-hidden="true">
+        <Icon size={20} />
+      </span>
+      <span>{label}</span>
+      <strong>{wholeNumber.format(value)}</strong>
+      {detail ? <small>{detail}</small> : null}
+    </div>
   );
 }
 

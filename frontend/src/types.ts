@@ -136,8 +136,30 @@ export interface MetricsSnapshot {
   privacy_note: string;
 }
 
+export interface ReportingSuiteWorkspaceMetric {
+  name: string;
+  active_views: number;
+}
+
+export interface ReportingSuiteSnapshot {
+  id: string;
+  name: string;
+  source_url: string;
+  source_ref: string;
+  purpose: string;
+  registered_views: number;
+  active_views: number;
+  api_capabilities: number;
+  data_tables: number;
+  automation_steps: number;
+  scheduled_workflows: number;
+  workspaces: ReportingSuiteWorkspaceMetric[];
+  source_note: string;
+}
+
 export interface MetricsEvidence {
   sources: MetricsSnapshot[];
+  reporting_suite?: ReportingSuiteSnapshot | null;
 }
 
 export interface ScheduleItem {
