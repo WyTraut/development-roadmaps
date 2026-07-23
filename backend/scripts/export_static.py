@@ -28,6 +28,7 @@ from backend.app.metrics import (  # noqa: E402
     fetch_github_issue_body,
 )
 from backend.app.reporting_suite import (  # noqa: E402
+    ReportingIssueBodyLoader,
     RepositoryFileLoader,
     build_reporting_suite_snapshot,
     fetch_github_repository_file,
@@ -51,6 +52,7 @@ def build_static_bundle(
     data_path: Path,
     github_token: str | None = None,
     issue_body_loader: IssueBodyLoader = fetch_github_issue_body,
+    reporting_issue_body_loader: ReportingIssueBodyLoader = fetch_github_issue_body,
     repository_file_loader: RepositoryFileLoader = fetch_github_repository_file,
 ) -> dict[str, Any]:
     raw = yaml.safe_load(data_path.read_text(encoding="utf-8"))
@@ -78,6 +80,7 @@ def build_static_bundle(
         reporting_suite_source,
         github_token=github_token,
         repository_file_loader=repository_file_loader,
+        issue_body_loader=reporting_issue_body_loader,
         fallback_snapshot=fallback_snapshot,
     )
     calculator = PortfolioCalculator(config)

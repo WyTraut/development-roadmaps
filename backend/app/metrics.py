@@ -7,17 +7,24 @@ from datetime import date, datetime
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-from .models import MetricsDailyTotal, MetricsEvidence, MetricsSnapshot, MetricsSource
+from .models import (
+    MetricsDailyTotal,
+    MetricsEvidence,
+    MetricsSnapshot,
+    MetricsSource,
+    ReportingSuiteMetricsSource,
+)
 
 
 class MetricsExportError(RuntimeError):
     """Raised when configured metrics evidence cannot be fetched or normalized."""
 
 
-IssueBodyLoader = Callable[[MetricsSource, str | None], str]
+IssueSource = MetricsSource | ReportingSuiteMetricsSource
+IssueBodyLoader = Callable[[IssueSource, str | None], str]
 
 
-def fetch_github_issue_body(source: MetricsSource, github_token: str | None) -> str:
+def fetch_github_issue_body(source: IssueSource, github_token: str | None) -> str:
     api_url = (
         f"https://api.github.com/repos/{source.repository}/issues/{source.issue_number}"
     )

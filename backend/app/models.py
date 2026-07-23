@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict, List, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 StageSelection = Literal["none", "foundation", "scale", "full"]
@@ -131,7 +131,15 @@ class ReportingSuiteSource(BaseModel):
     server_path: str = "server.py"
     database_path: str = "shared/db.py"
     fallback_snapshot_path: str | None = None
+    metrics_issue: "ReportingSuiteMetricsSource | None" = None
     purpose: str
+
+
+class ReportingSuiteMetricsSource(BaseModel):
+    id: str = Field(pattern=r"^[a-z][a-z0-9_]*$")
+    repository: str = Field(pattern=r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
+    issue_number: int = Field(ge=1)
+    requires_auth: bool = False
 
 
 class PortfolioConfig(BaseModel):
@@ -242,6 +250,34 @@ class ReportingSuiteWorkspaceMetric(BaseModel):
     active_views: int = Field(ge=0)
 
 
+class ReportingSuiteMonthlyView(BaseModel):
+    month: str = Field(pattern=r"^\d{4}-\d{2}$")
+    views: int = Field(ge=0)
+
+    @field_validator("month")
+    @classmethod
+    def validate_month(cls, value: str) -> str:
+        if not 1 <= int(value[-2:]) <= 12:
+            raise ValueError("month must use YYYY-MM with a valid month")
+        return value
+
+
+class ReportingSuiteMetricsPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    schema_version: Literal[1]
+    code_ref: str = Field(min_length=1)
+    report_views: int = Field(ge=0)
+    total_views: int | None = Field(default=None, ge=0)
+    data_points: int | None = Field(default=None, ge=0)
+    unique_viewers: int | None = Field(default=None, ge=0)
+    source_systems: List[str] = Field(min_length=1)
+    tracking_started: str | None = None
+    last_aggregated: str | None = None
+    monthly_views: List[ReportingSuiteMonthlyView] = Field(default_factory=list)
+    privacy_note: str = Field(min_length=1)
+
+
 class ReportingSuiteSnapshot(BaseModel):
     id: str
     name: str
@@ -256,6 +292,15 @@ class ReportingSuiteSnapshot(BaseModel):
     scheduled_workflows: int = Field(ge=0)
     workspaces: List[ReportingSuiteWorkspaceMetric]
     source_note: str
+    report_views: int = Field(default=0, ge=0)
+    total_views: int | None = Field(default=None, ge=0)
+    data_points: int | None = Field(default=None, ge=0)
+    unique_viewers: int | None = Field(default=None, ge=0)
+    source_systems: List[str] = Field(default_factory=list)
+    tracking_started: str | None = None
+    last_aggregated: str | None = None
+    monthly_views: List[ReportingSuiteMonthlyView] = Field(default_factory=list)
+    privacy_note: str = ""
 
 
 class MetricsEvidence(BaseModel):

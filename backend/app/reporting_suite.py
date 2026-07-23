@@ -7,13 +7,16 @@ import re
 import warnings
 from collections import Counter
 from collections.abc import Callable
+from datetime import datetime
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote
 from urllib.request import Request, urlopen
 
-from .metrics import MetricsExportError
+from .metrics import MetricsExportError, fetch_github_issue_body
 from .models import (
+    ReportingSuiteMetricsPayload,
+    ReportingSuiteMetricsSource,
     ReportingSuiteSnapshot,
     ReportingSuiteSource,
     ReportingSuiteWorkspaceMetric,
@@ -21,6 +24,11 @@ from .models import (
 
 
 RepositoryFileLoader = Callable[[ReportingSuiteSource, str, str | None], str]
+ReportingIssueBodyLoader = Callable[
+    [ReportingSuiteMetricsSource, str | None],
+    str,
+]
+REPORTING_METRICS_MARKER = "<!-- reporting-suite-metrics:v1 -->"
 
 
 def fetch_github_repository_file(
@@ -77,45 +85,71 @@ def build_reporting_suite_snapshot(
     source: ReportingSuiteSource | None,
     github_token: str | None,
     repository_file_loader: RepositoryFileLoader = fetch_github_repository_file,
+    issue_body_loader: ReportingIssueBodyLoader = fetch_github_issue_body,
     fallback_snapshot: ReportingSuiteSnapshot | None = None,
 ) -> ReportingSuiteSnapshot | None:
     if source is None:
         return None
+
+    code_snapshot: ReportingSuiteSnapshot
     if source.requires_auth and not github_token:
         if fallback_snapshot is not None:
             _warn_fallback(source)
-            return fallback_snapshot
-        raise MetricsExportError(
-            "METRICS_GITHUB_TOKEN is required to export private Reporting Suite "
-            f"source '{source.id}'"
-        )
-
-    files: dict[str, str] = {}
-    try:
-        for path in (
-            source.page_registry_path,
-            source.server_path,
-            source.database_path,
-        ):
-            files[path] = repository_file_loader(source, path, github_token)
-    except MetricsExportError:
-        if fallback_snapshot is not None:
+            code_snapshot = fallback_snapshot
+        else:
+            raise MetricsExportError(
+                "METRICS_GITHUB_TOKEN is required to export private Reporting Suite "
+                f"source '{source.id}'"
+            )
+    else:
+        files: dict[str, str] = {}
+        try:
+            for path in (
+                source.page_registry_path,
+                source.server_path,
+                source.database_path,
+            ):
+                files[path] = repository_file_loader(source, path, github_token)
+            code_snapshot = parse_reporting_suite_source(
+                source,
+                page_registry_text=files[source.page_registry_path],
+                server_text=files[source.server_path],
+                database_text=files[source.database_path],
+            )
+        except MetricsExportError:
+            if fallback_snapshot is None:
+                raise
             _warn_fallback(source)
-            return fallback_snapshot
+            code_snapshot = fallback_snapshot
+        except Exception as exc:
+            if fallback_snapshot is None:
+                raise MetricsExportError(
+                    f"Reporting Suite source '{source.id}' could not be loaded: {exc}"
+                ) from exc
+            _warn_fallback(source)
+            code_snapshot = fallback_snapshot
+
+    if source.metrics_issue is None:
+        return code_snapshot
+    if source.metrics_issue.requires_auth and not github_token:
+        raise MetricsExportError(
+            "METRICS_GITHUB_TOKEN is required to export Reporting Suite metrics "
+            f"source '{source.metrics_issue.id}'"
+        )
+    try:
+        issue_token = github_token if source.metrics_issue.requires_auth else None
+        issue_body = issue_body_loader(source.metrics_issue, issue_token)
+    except MetricsExportError:
         raise
     except Exception as exc:
-        if fallback_snapshot is not None:
-            _warn_fallback(source)
-            return fallback_snapshot
         raise MetricsExportError(
-            f"Reporting Suite source '{source.id}' could not be loaded: {exc}"
+            f"Reporting Suite metrics source '{source.metrics_issue.id}' "
+            f"could not be loaded: {exc}"
         ) from exc
-
-    return parse_reporting_suite_source(
-        source,
-        page_registry_text=files[source.page_registry_path],
-        server_text=files[source.server_path],
-        database_text=files[source.database_path],
+    return parse_reporting_suite_metrics_issue(
+        source.metrics_issue,
+        issue_body,
+        code_snapshot,
     )
 
 
@@ -157,6 +191,60 @@ def parse_reporting_suite_source(
     workspace_counts = Counter(
         str(page.get("section") or "Other") for page in active_pages
     )
+    active_page_ids = {
+        str(page.get("id") or "")
+        for page in active_pages
+    }
+    named_view_ids: set[str] = set()
+    embedded_views = 0
+    for page in active_pages:
+        views = page.get("views") or []
+        if not isinstance(views, list):
+            raise MetricsExportError(
+                f"Reporting Suite source '{source.id}' page views are invalid"
+            )
+        for view in views:
+            _validate_named_view(source, view, named_view_ids)
+            embedded_views += 1
+
+    metric_view_groups = registry.get("metric_view_groups") or []
+    if not isinstance(metric_view_groups, list):
+        raise MetricsExportError(
+            f"Reporting Suite source '{source.id}' metric view groups are invalid"
+        )
+    metric_views = 0
+    for group in metric_view_groups:
+        if not isinstance(group, dict):
+            raise MetricsExportError(
+                f"Reporting Suite source '{source.id}' has an invalid metric view group"
+            )
+        if str(group.get("parent_page") or "") not in active_page_ids:
+            raise MetricsExportError(
+                f"Reporting Suite source '{source.id}' metric view group "
+                "does not reference an active page"
+            )
+        views = group.get("views")
+        if not isinstance(views, list) or not views:
+            raise MetricsExportError(
+                f"Reporting Suite source '{source.id}' has an empty metric view group"
+            )
+        for view in views:
+            _validate_named_view(source, view, named_view_ids)
+            metric_views += 1
+
+    source_system_rows = registry.get("source_systems") or []
+    if not isinstance(source_system_rows, list):
+        raise MetricsExportError(
+            f"Reporting Suite source '{source.id}' source systems are invalid"
+        )
+    source_systems: list[str] = []
+    for row in source_system_rows:
+        name = str(row.get("name") or "").strip() if isinstance(row, dict) else ""
+        if not name or name in source_systems:
+            raise MetricsExportError(
+                f"Reporting Suite source '{source.id}' has an invalid source system"
+            )
+        source_systems.append(name)
 
     try:
         server_tree = ast.parse(server_text)
@@ -206,7 +294,115 @@ def parse_reporting_suite_source(
             "Derived from the active page registry, API route definitions, "
             "database schema, and scheduler configuration."
         ),
+        report_views=len(active_pages) + embedded_views + metric_views,
+        source_systems=source_systems,
     )
+
+
+def parse_reporting_suite_metrics_issue(
+    source: ReportingSuiteMetricsSource,
+    issue_body: str,
+    code_snapshot: ReportingSuiteSnapshot,
+) -> ReportingSuiteSnapshot:
+    if REPORTING_METRICS_MARKER not in issue_body:
+        raise MetricsExportError(
+            f"Reporting Suite metrics source '{source.id}' is missing marker "
+            f"'{REPORTING_METRICS_MARKER}'"
+        )
+    match = re.search(
+        r"```json\s*(\{.*?\})\s*```",
+        issue_body,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    if match is None:
+        raise MetricsExportError(
+            f"Reporting Suite metrics source '{source.id}' has no JSON payload"
+        )
+    try:
+        raw_payload = json.loads(match.group(1))
+        payload = ReportingSuiteMetricsPayload.model_validate(raw_payload)
+    except (json.JSONDecodeError, ValueError) as exc:
+        raise MetricsExportError(
+            f"Reporting Suite metrics source '{source.id}' has an invalid v1 payload"
+        ) from exc
+
+    _validate_issue_timestamp(source, "tracking_started", payload.tracking_started)
+    _validate_issue_timestamp(source, "last_aggregated", payload.last_aggregated)
+    live_totals = (payload.total_views, payload.data_points, payload.unique_viewers)
+    if any(value is None for value in live_totals) and not all(
+        value is None for value in live_totals
+    ):
+        raise MetricsExportError(
+            f"Reporting Suite metrics source '{source.id}' has incomplete live totals"
+        )
+    if any(value is not None for value in live_totals) and payload.last_aggregated is None:
+        raise MetricsExportError(
+            f"Reporting Suite metrics source '{source.id}' has live totals "
+            "without last_aggregated"
+        )
+    months = [row.month for row in payload.monthly_views]
+    if months != sorted(set(months)):
+        raise MetricsExportError(
+            f"Reporting Suite metrics source '{source.id}' has duplicate or "
+            "unordered monthly views"
+        )
+    if payload.monthly_views and payload.total_views is None:
+        raise MetricsExportError(
+            f"Reporting Suite metrics source '{source.id}' has monthly views "
+            "without total_views"
+        )
+
+    merged = code_snapshot.model_dump()
+    merged.update({
+        "source_url": (
+            f"https://github.com/{source.repository}/issues/{source.issue_number}"
+        ),
+        "source_ref": payload.code_ref,
+        "report_views": code_snapshot.report_views,
+        "total_views": payload.total_views,
+        "data_points": payload.data_points,
+        "unique_viewers": payload.unique_viewers,
+        "source_systems": code_snapshot.source_systems or payload.source_systems,
+        "tracking_started": payload.tracking_started,
+        "last_aggregated": payload.last_aggregated,
+        "monthly_views": payload.monthly_views,
+        "privacy_note": payload.privacy_note,
+    })
+    return ReportingSuiteSnapshot.model_validate(merged)
+
+
+def _validate_named_view(
+    source: ReportingSuiteSource,
+    view: object,
+    known_ids: set[str],
+) -> None:
+    if not isinstance(view, dict):
+        raise MetricsExportError(
+            f"Reporting Suite source '{source.id}' has an invalid named view"
+        )
+    view_id = str(view.get("id") or "").strip()
+    title = str(view.get("title") or "").strip()
+    if not view_id or not title or view_id in known_ids:
+        raise MetricsExportError(
+            f"Reporting Suite source '{source.id}' has a duplicate or incomplete "
+            "named view"
+        )
+    known_ids.add(view_id)
+
+
+def _validate_issue_timestamp(
+    source: ReportingSuiteMetricsSource,
+    label: str,
+    value: str | None,
+) -> None:
+    if value is None:
+        return
+    try:
+        datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise MetricsExportError(
+            f"Reporting Suite metrics source '{source.id}' has an invalid {label}"
+        ) from exc
 
 
 def _schedule_counts(server_tree: ast.AST) -> tuple[int, int]:

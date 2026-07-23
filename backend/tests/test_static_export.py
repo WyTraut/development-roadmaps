@@ -8,12 +8,18 @@ import yaml
 
 from backend.app.metrics import MetricsExportError, parse_metrics_issue
 from backend.app.models import PortfolioConfig
-from backend.app.reporting_suite import parse_reporting_suite_source
+from backend.app.reporting_suite import (
+    parse_reporting_suite_metrics_issue,
+    parse_reporting_suite_source,
+)
 from backend.scripts.export_static import build_static_bundle, scenario_key
 
 
 ROOT = Path(__file__).resolve().parents[2]
 ISSUE_FIXTURE = ROOT / "backend" / "tests" / "fixtures" / "l2l_metrics_issue.md"
+REPORTING_ISSUE_FIXTURE = (
+    ROOT / "backend" / "tests" / "fixtures" / "reporting_suite_metrics_issue.md"
+)
 REPORTING_SUITE_FIXTURES = (
     ROOT / "backend" / "tests" / "fixtures" / "reporting_suite"
 )
@@ -21,6 +27,11 @@ REPORTING_SUITE_FIXTURES = (
 
 def issue_body_loader(*_: object) -> str:
     return ISSUE_FIXTURE.read_text(encoding="utf-8")
+
+
+def reporting_issue_body_loader(_: object, token: object) -> str:
+    assert token is None
+    return REPORTING_ISSUE_FIXTURE.read_text(encoding="utf-8")
 
 
 def repository_file_loader(_: object, path: str, __: object) -> str:
@@ -41,6 +52,7 @@ def test_static_export_contains_every_scenario() -> None:
         ROOT / "data" / "roadmaps.yaml",
         github_token="test-token",
         issue_body_loader=issue_body_loader,
+        reporting_issue_body_loader=reporting_issue_body_loader,
         repository_file_loader=repository_file_loader,
     )
 
@@ -65,6 +77,15 @@ def test_static_export_contains_every_scenario() -> None:
     assert bundle["metrics"]["sources"][0]["id"] == "l2l_scrubber"
     assert bundle["metrics"]["reporting_suite"]["id"] == "reporting_suite"
     assert bundle["metrics"]["reporting_suite"]["active_views"] == 3
+    assert bundle["metrics"]["reporting_suite"]["report_views"] == 6
+    assert bundle["metrics"]["reporting_suite"]["total_views"] == 12450
+    assert bundle["metrics"]["reporting_suite"]["data_points"] == 987654
+    assert bundle["metrics"]["reporting_suite"]["unique_viewers"] == 84
+    assert bundle["metrics"]["reporting_suite"]["source_systems"] == [
+        "Slider",
+        "FlightDeck",
+    ]
+    assert len(bundle["metrics"]["reporting_suite"]["monthly_views"]) == 3
     assert "redacted" not in json.dumps(bundle["metrics"])
     assert "Client Totals" not in json.dumps(bundle["metrics"])
 
@@ -108,10 +129,86 @@ def test_reporting_suite_parser_derives_capabilities_from_source() -> None:
     assert snapshot.data_tables == 2
     assert snapshot.automation_steps == 3
     assert snapshot.scheduled_workflows == 2
+    assert snapshot.report_views == 6
+    assert snapshot.source_systems == ["Slider", "FlightDeck"]
     assert [
         (workspace.name, workspace.active_views)
         for workspace in snapshot.workspaces
     ] == [("Operations", 2), ("FIT", 1)]
+
+
+def test_reporting_suite_issue_merges_live_aggregates_with_code_inventory() -> None:
+    raw = yaml.safe_load((ROOT / "data" / "roadmaps.yaml").read_text(encoding="utf-8"))
+    source = PortfolioConfig.model_validate(raw).reporting_suite_source
+    assert source is not None
+    assert source.metrics_issue is not None
+    code_snapshot = parse_reporting_suite_source(
+        source,
+        page_registry_text=repository_file_loader(
+            source, source.page_registry_path, "test-token"
+        ),
+        server_text=repository_file_loader(source, source.server_path, "test-token"),
+        database_text=repository_file_loader(
+            source, source.database_path, "test-token"
+        ),
+    )
+
+    snapshot = parse_reporting_suite_metrics_issue(
+        source.metrics_issue,
+        REPORTING_ISSUE_FIXTURE.read_text(encoding="utf-8"),
+        code_snapshot,
+    )
+
+    assert snapshot.report_views == 6
+    assert snapshot.source_systems == ["Slider", "FlightDeck"]
+    assert snapshot.total_views == 12450
+    assert snapshot.source_ref == "fixture123"
+    assert snapshot.source_url.endswith("/issues/29")
+    assert snapshot.monthly_views[-1].views == 1490
+
+
+def test_reporting_suite_issue_rejects_malformed_or_identity_fields() -> None:
+    raw = yaml.safe_load((ROOT / "data" / "roadmaps.yaml").read_text(encoding="utf-8"))
+    source = PortfolioConfig.model_validate(raw).reporting_suite_source
+    assert source is not None
+    assert source.metrics_issue is not None
+    code_snapshot = parse_reporting_suite_source(
+        source,
+        page_registry_text=repository_file_loader(
+            source, source.page_registry_path, "test-token"
+        ),
+        server_text=repository_file_loader(source, source.server_path, "test-token"),
+        database_text=repository_file_loader(
+            source, source.database_path, "test-token"
+        ),
+    )
+
+    with pytest.raises(MetricsExportError, match="missing marker"):
+        parse_reporting_suite_metrics_issue(
+            source.metrics_issue,
+            "```json\n{}\n```",
+            code_snapshot,
+        )
+    unsafe = REPORTING_ISSUE_FIXTURE.read_text(encoding="utf-8").replace(
+        '"privacy_note": "Aggregate metrics only."',
+        '"privacy_note": "Aggregate metrics only.", "emails": ["private@example.com"]',
+    )
+    with pytest.raises(MetricsExportError, match="invalid v1 payload"):
+        parse_reporting_suite_metrics_issue(
+            source.metrics_issue,
+            unsafe,
+            code_snapshot,
+        )
+    invalid_month = REPORTING_ISSUE_FIXTURE.read_text(encoding="utf-8").replace(
+        '"month": "2026-05"',
+        '"month": "2026-13"',
+    )
+    with pytest.raises(MetricsExportError, match="invalid v1 payload"):
+        parse_reporting_suite_metrics_issue(
+            source.metrics_issue,
+            invalid_month,
+            code_snapshot,
+        )
 
 
 def test_static_export_uses_code_snapshot_when_private_repo_is_unavailable() -> None:
@@ -120,13 +217,16 @@ def test_static_export_uses_code_snapshot_when_private_repo_is_unavailable() -> 
             ROOT / "data" / "roadmaps.yaml",
             github_token="test-token",
             issue_body_loader=issue_body_loader,
+            reporting_issue_body_loader=reporting_issue_body_loader,
             repository_file_loader=unavailable_repository_file_loader,
         )
 
     reporting_suite = bundle["metrics"]["reporting_suite"]
     assert reporting_suite["active_views"] == 47
     assert reporting_suite["api_capabilities"] == 156
-    assert reporting_suite["source_ref"] == "7ebd7db"
+    assert reporting_suite["report_views"] == 175
+    assert reporting_suite["total_views"] == 12450
+    assert reporting_suite["source_ref"] == "fixture123"
 
 
 def test_static_export_requires_token_for_private_metrics_source() -> None:
@@ -134,6 +234,7 @@ def test_static_export_requires_token_for_private_metrics_source() -> None:
         build_static_bundle(
             ROOT / "data" / "roadmaps.yaml",
             issue_body_loader=issue_body_loader,
+            reporting_issue_body_loader=reporting_issue_body_loader,
             repository_file_loader=repository_file_loader,
         )
 
