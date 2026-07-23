@@ -331,7 +331,7 @@ function ReportingSuitePage({ snapshot }: { snapshot: ReportingSuiteSnapshot }) 
         aria-labelledby="reporting-suite-adoption-heading"
       >
         <header>
-          <h2 id="reporting-suite-adoption-heading">Cumulative adoption</h2>
+          <h2 id="reporting-suite-adoption-heading">Cumulative Views</h2>
           {snapshot.tracking_started ? (
             <span>Since {formatDatePart(snapshot.tracking_started)}</span>
           ) : null}
