@@ -107,6 +107,21 @@ function formatMonth(month: string): string {
   return new Intl.DateTimeFormat("en-US", { month: "short", timeZone: "UTC" }).format(date);
 }
 
+function buildCumulativeMonthlyViews(
+  monthlyViews: ReportingSuiteSnapshot["monthly_views"],
+  totalViews: number | null | undefined
+): ReportingSuiteSnapshot["monthly_views"] {
+  const displayedViews = monthlyViews.reduce((total, month) => total + month.views, 0);
+  let runningTotal = totalViews === null || totalViews === undefined
+    ? 0
+    : Math.max(0, totalViews - displayedViews);
+
+  return monthlyViews.map((month) => {
+    runningTotal += month.views;
+    return { ...month, views: runningTotal };
+  });
+}
+
 export default function MetricsPage({
   evidence,
   activeView,
@@ -253,12 +268,16 @@ function ReportingSuitePage({ snapshot }: { snapshot: ReportingSuiteSnapshot }) 
   const reportViews = snapshot.report_views ?? snapshot.active_views;
   const sourceSystems = snapshot.source_systems ?? [];
   const monthlyViews = snapshot.monthly_views ?? [];
-  const maximumMonthlyViews = Math.max(
-    1,
-    ...monthlyViews.map((month) => month.views)
+  const cumulativeMonthlyViews = buildCumulativeMonthlyViews(
+    monthlyViews,
+    snapshot.total_views
   );
-  const monthlySummary = monthlyViews
-    .map((month) => `${month.month}: ${wholeNumber.format(month.views)} views`)
+  const maximumCumulativeViews = Math.max(
+    1,
+    ...cumulativeMonthlyViews.map((month) => month.views)
+  );
+  const cumulativeSummary = cumulativeMonthlyViews
+    .map((month) => `${month.month}: ${wholeNumber.format(month.views)} total views`)
     .join(", ");
 
   return (
@@ -312,20 +331,23 @@ function ReportingSuitePage({ snapshot }: { snapshot: ReportingSuiteSnapshot }) 
         aria-labelledby="reporting-suite-adoption-heading"
       >
         <header>
-          <h2 id="reporting-suite-adoption-heading">Monthly adoption</h2>
+          <h2 id="reporting-suite-adoption-heading">Cumulative adoption</h2>
           {snapshot.tracking_started ? (
             <span>Since {formatDatePart(snapshot.tracking_started)}</span>
           ) : null}
         </header>
-        {monthlyViews.length > 0 ? (
+        {cumulativeMonthlyViews.length > 0 ? (
           <div
             className="reporting-suite-adoption-chart"
             role="img"
-            aria-label={`Monthly Reporting Suite views. ${monthlySummary}`}
-            style={{ "--month-count": monthlyViews.length } as CSSProperties}
+            aria-label={`Cumulative Reporting Suite views. ${cumulativeSummary}`}
+            style={{ "--month-count": cumulativeMonthlyViews.length } as CSSProperties}
           >
-            {monthlyViews.map((month) => {
-              const percentage = Math.max(3, (month.views / maximumMonthlyViews) * 100);
+            {cumulativeMonthlyViews.map((month) => {
+              const percentage = Math.max(
+                3,
+                (month.views / maximumCumulativeViews) * 100
+              );
               return (
                 <div
                   className="reporting-suite-adoption-month"
