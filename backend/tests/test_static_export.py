@@ -30,7 +30,7 @@ def issue_body_loader(*_: object) -> str:
 
 
 def reporting_issue_body_loader(_: object, token: object) -> str:
-    assert token is None
+    assert token == "test-token"
     return REPORTING_ISSUE_FIXTURE.read_text(encoding="utf-8")
 
 

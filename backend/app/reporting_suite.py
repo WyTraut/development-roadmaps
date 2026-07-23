@@ -137,8 +137,7 @@ def build_reporting_suite_snapshot(
             f"source '{source.metrics_issue.id}'"
         )
     try:
-        issue_token = github_token if source.metrics_issue.requires_auth else None
-        issue_body = issue_body_loader(source.metrics_issue, issue_token)
+        issue_body = issue_body_loader(source.metrics_issue, github_token)
     except MetricsExportError:
         raise
     except Exception as exc:
