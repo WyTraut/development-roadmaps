@@ -178,7 +178,7 @@ describe("MetricsPage", () => {
     expect(within(summary).getByText("84")).toBeVisible();
     expect(within(summary).getByText("Source systems")).toBeVisible();
     expect(within(summary).getByText("8")).toBeVisible();
-    expect(screen.getByRole("heading", { name: "Cumulative adoption" })).toBeVisible();
+    expect(screen.getByRole("heading", { name: "Cumulative Views" })).toBeVisible();
     expect(
       screen.getByRole("img", {
         name: "Cumulative Reporting Suite views. 2026-05: 9,630 total views, 2026-06: 10,960 total views, 2026-07: 12,450 total views"
