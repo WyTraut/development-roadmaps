@@ -339,7 +339,7 @@ describe("App", () => {
     await screen.findByRole("heading", { name: "Development Path" });
     await user.click(screen.getByRole("button", { name: "Metrics" }));
 
-    expect(screen.getByRole("heading", { name: "Metrics" })).toBeVisible();
+    expect(screen.getByRole("heading", { name: "Activations Scrub Tool" })).toBeVisible();
     expect(screen.getByRole("button", { name: "Metrics" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByText("No metrics available.")).toBeVisible();
     expect(window.location.hash).toBe("#metrics");
@@ -350,7 +350,9 @@ describe("App", () => {
 
     render(<App />);
 
-    expect(await screen.findByRole("heading", { name: "Metrics" })).toBeVisible();
+    expect(
+      await screen.findByRole("heading", { name: "Activations Scrub Tool" })
+    ).toBeVisible();
     expect(screen.getByRole("button", { name: "Metrics" })).toHaveAttribute("aria-current", "page");
     expect(window.location.hash).toBe("#metrics");
   });
@@ -361,9 +363,8 @@ describe("App", () => {
     render(<App />);
 
     expect(await screen.findByRole("heading", { name: "Reporting Suite" })).toBeVisible();
-    expect(screen.getByRole("tab", { name: "Reporting Suite" })).toHaveAttribute(
-      "aria-selected",
-      "true"
+    expect(screen.getByRole("combobox", { name: "Metrics page" })).toHaveValue(
+      "reporting-suite"
     );
     expect(screen.getByText("No code metrics available.")).toBeVisible();
     expect(window.location.hash).toBe("#metrics/reporting-suite");

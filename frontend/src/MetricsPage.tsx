@@ -3,6 +3,7 @@ import {
   ArrowRight,
   BarChart3,
   CalendarDays,
+  ChevronDown,
   Clock3,
   Cloud,
   Database,
@@ -109,49 +110,28 @@ export default function MetricsPage({
     onViewChange?.(view);
   }
 
-  function handleViewKeyDown(
-    event: React.KeyboardEvent<HTMLButtonElement>,
-    index: number
-  ) {
-    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
-    event.preventDefault();
-    const direction = event.key === "ArrowRight" ? 1 : -1;
-    const nextIndex = (index + direction + metricsViews.length) % metricsViews.length;
-    const nextView = metricsViews[nextIndex].id;
-    selectView(nextView);
-    document.getElementById(`metrics-tab-${nextView}`)?.focus();
-  }
+  const activationsSnapshot = evidence.sources[0];
+  const selectedTitle = selectedView === "reporting-suite"
+    ? evidence.reporting_suite?.name ?? "Reporting Suite"
+    : activationsSnapshot?.name ?? "Activations Scrub Tool";
 
   return (
     <section className="metrics-evidence" aria-label="Operational impact metrics">
-      <nav className="metrics-view-tabs" role="tablist" aria-label="Metrics views">
-        {metricsViews.map(({ id, label, icon: Icon }, index) => (
-          <button
-            id={`metrics-tab-${id}`}
-            key={id}
-            type="button"
-            role="tab"
-            aria-selected={selectedView === id}
-            aria-controls={`metrics-panel-${id}`}
-            tabIndex={selectedView === id ? 0 : -1}
-            className={selectedView === id ? "active" : ""}
-            onClick={() => selectView(id)}
-            onKeyDown={(event) => handleViewKeyDown(event, index)}
-          >
-            <Icon aria-hidden="true" size={17} />
-            {label}
-          </button>
-        ))}
-      </nav>
+      <MetricsPageHeader
+        evidence={evidence}
+        selectedView={selectedView}
+        selectedTitle={selectedTitle}
+        onSelectView={selectView}
+      />
 
       <div
         id="metrics-panel-activations"
-        role="tabpanel"
-        aria-labelledby="metrics-tab-activations"
+        role="region"
+        aria-labelledby="metrics-page-heading"
         hidden={selectedView !== "activations"}
       >
         {evidence.sources.length === 0 ? (
-          <MetricsEmptyState title="Metrics" message="No metrics available." />
+          <MetricsEmptyState message="No metrics available." />
         ) : (
           evidence.sources.map((snapshot, index) => (
             <MetricsSourceSection key={snapshot.id} snapshot={snapshot} primary={index === 0} />
@@ -161,25 +141,94 @@ export default function MetricsPage({
 
       <div
         id="metrics-panel-reporting-suite"
-        role="tabpanel"
-        aria-labelledby="metrics-tab-reporting-suite"
+        role="region"
+        aria-labelledby="metrics-page-heading"
         hidden={selectedView !== "reporting-suite"}
       >
         {evidence.reporting_suite ? (
           <ReportingSuitePage snapshot={evidence.reporting_suite} />
         ) : (
-          <MetricsEmptyState title="Reporting Suite" message="No code metrics available." />
+          <MetricsEmptyState message="No code metrics available." />
         )}
       </div>
     </section>
   );
 }
 
-function MetricsEmptyState({ title, message }: { title: string; message: string }) {
+function MetricsPageHeader({
+  evidence,
+  selectedView,
+  selectedTitle,
+  onSelectView
+}: {
+  evidence: MetricsEvidence;
+  selectedView: MetricsView;
+  selectedTitle: string;
+  onSelectView: (view: MetricsView) => void;
+}) {
+  const activationsSnapshot = evidence.sources[0];
+  const reportingSuiteSnapshot = evidence.reporting_suite;
+
+  return (
+    <header className="metrics-source-header metrics-page-header">
+      <div>
+        {selectedView === "reporting-suite" ? (
+          <span className="section-kicker">Code-derived capability</span>
+        ) : null}
+        <div className="metrics-title-selector">
+          <h1 id="metrics-page-heading">{selectedTitle}</h1>
+          <ChevronDown aria-hidden="true" size={22} strokeWidth={2} />
+          <select
+            aria-label="Metrics page"
+            value={selectedView}
+            onChange={(event) => onSelectView(event.target.value as MetricsView)}
+            title="Switch metrics page"
+          >
+            {metricsViews.map(({ id, label }) => (
+              <option value={id} key={id}>{label}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+      {selectedView === "reporting-suite" ? (
+        reportingSuiteSnapshot ? (
+          <div className="metrics-source-meta">
+            <span>Source {reportingSuiteSnapshot.source_ref}</span>
+            <a
+              className="metrics-source-link"
+              href={reportingSuiteSnapshot.source_url}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={`View source code for ${reportingSuiteSnapshot.name}`}
+              title="View source repository"
+            >
+              <ExternalLink aria-hidden="true" size={18} />
+            </a>
+          </div>
+        ) : null
+      ) : activationsSnapshot ? (
+        <div className="metrics-source-meta">
+          <span>Updated {formatDatePart(activationsSnapshot.last_aggregated)}</span>
+          <a
+            className="metrics-source-link"
+            href={activationsSnapshot.source_url}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={`View source metrics for ${activationsSnapshot.name}`}
+            title="View source issue"
+          >
+            <ExternalLink aria-hidden="true" size={18} />
+          </a>
+        </div>
+      ) : null}
+    </header>
+  );
+}
+
+function MetricsEmptyState({ message }: { message: string }) {
   return (
     <div className="metrics-empty-state" role="status">
       <BarChart3 aria-hidden="true" size={30} />
-      <h1>{title}</h1>
       <p>{message}</p>
     </div>
   );
@@ -197,28 +246,8 @@ function ReportingSuitePage({ snapshot }: { snapshot: ReportingSuiteSnapshot }) 
   return (
     <article
       className="metrics-source-section reporting-suite-section"
-      aria-labelledby={`metrics-source-${snapshot.id}`}
+      aria-labelledby="metrics-page-heading"
     >
-      <header className="metrics-source-header">
-        <div>
-          <span className="section-kicker">Code-derived capability</span>
-          <h1 id={`metrics-source-${snapshot.id}`}>{snapshot.name}</h1>
-        </div>
-        <div className="metrics-source-meta">
-          <span>Source {snapshot.source_ref}</span>
-          <a
-            className="metrics-source-link"
-            href={snapshot.source_url}
-            target="_blank"
-            rel="noreferrer"
-            aria-label={`View source code for ${snapshot.name}`}
-            title="View source repository"
-          >
-            <ExternalLink aria-hidden="true" size={18} />
-          </a>
-        </div>
-      </header>
-
       <section
         className="reporting-suite-kpis"
         aria-label={`${snapshot.name} code capability summary`}
@@ -323,26 +352,31 @@ function MetricsSourceSection({
   const heading = scrubToolSource ? snapshot.name : `${snapshot.name} impact`;
 
   return (
-    <article className="metrics-source-section" aria-labelledby={headingId}>
-      <header className="metrics-source-header">
-        <div>
-          {scrubToolSource ? null : <span className="section-kicker">Usage to date</span>}
-          {primary ? <h1 id={headingId}>{heading}</h1> : <h2 id={headingId}>{heading}</h2>}
-        </div>
-        <div className="metrics-source-meta">
-          <span>Updated {formatDatePart(snapshot.last_aggregated)}</span>
-          <a
-            className="metrics-source-link"
-            href={snapshot.source_url}
-            target="_blank"
-            rel="noreferrer"
-            aria-label={`View source metrics for ${snapshot.name}`}
-            title="View source issue"
-          >
-            <ExternalLink aria-hidden="true" size={18} />
-          </a>
-        </div>
-      </header>
+    <article
+      className="metrics-source-section"
+      aria-labelledby={primary ? "metrics-page-heading" : headingId}
+    >
+      {primary ? null : (
+        <header className="metrics-source-header">
+          <div>
+            {scrubToolSource ? null : <span className="section-kicker">Usage to date</span>}
+            <h2 id={headingId}>{heading}</h2>
+          </div>
+          <div className="metrics-source-meta">
+            <span>Updated {formatDatePart(snapshot.last_aggregated)}</span>
+            <a
+              className="metrics-source-link"
+              href={snapshot.source_url}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={`View source metrics for ${snapshot.name}`}
+              title="View source issue"
+            >
+              <ExternalLink aria-hidden="true" size={18} />
+            </a>
+          </div>
+        </header>
+      )}
 
       <section className="metrics-impact-summary" aria-label={`${snapshot.name} aggregate summary`}>
         <div className="metrics-impact-primary">
