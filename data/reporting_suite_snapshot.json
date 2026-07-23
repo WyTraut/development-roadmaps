@@ -1,0 +1,44 @@
+{
+  "id": "reporting_suite",
+  "name": "Reporting Suite",
+  "source_url": "https://github.com/WyTraut/Private/tree/main",
+  "source_ref": "7ebd7db",
+  "purpose": "Code-derived evidence of the reporting platform's built-in reach and automation.",
+  "registered_views": 52,
+  "active_views": 47,
+  "api_capabilities": 156,
+  "data_tables": 38,
+  "automation_steps": 26,
+  "scheduled_workflows": 6,
+  "workspaces": [
+    {
+      "name": "Operations",
+      "active_views": 13
+    },
+    {
+      "name": "FIT",
+      "active_views": 10
+    },
+    {
+      "name": "Hub",
+      "active_views": 7
+    },
+    {
+      "name": "Offnet",
+      "active_views": 6
+    },
+    {
+      "name": "Tools",
+      "active_views": 6
+    },
+    {
+      "name": "Admin",
+      "active_views": 3
+    },
+    {
+      "name": "Manager Views",
+      "active_views": 2
+    }
+  ],
+  "source_note": "Derived from the page registry, API routes, database schema, and scheduler configuration at source commit 7ebd7db."
+}

@@ -31,6 +31,7 @@ from backend.app.reporting_suite import (  # noqa: E402
     RepositoryFileLoader,
     build_reporting_suite_snapshot,
     fetch_github_repository_file,
+    load_reporting_suite_snapshot,
 )
 
 
@@ -64,10 +65,20 @@ def build_static_bundle(
         github_token=github_token,
         issue_body_loader=issue_body_loader,
     )
+    reporting_suite_source = config.reporting_suite_source
+    fallback_snapshot = None
+    if (
+        reporting_suite_source is not None
+        and reporting_suite_source.fallback_snapshot_path is not None
+    ):
+        fallback_snapshot = load_reporting_suite_snapshot(
+            data_path.parent / reporting_suite_source.fallback_snapshot_path
+        )
     metrics.reporting_suite = build_reporting_suite_snapshot(
-        config.reporting_suite_source,
+        reporting_suite_source,
         github_token=github_token,
         repository_file_loader=repository_file_loader,
+        fallback_snapshot=fallback_snapshot,
     )
     calculator = PortfolioCalculator(config)
     roadmap_ids = [roadmap.id for roadmap in config.roadmaps]

@@ -130,6 +130,7 @@ class ReportingSuiteSource(BaseModel):
     page_registry_path: str = "shared/page_registry.json"
     server_path: str = "server.py"
     database_path: str = "shared/db.py"
+    fallback_snapshot_path: str | None = None
     purpose: str
 
 

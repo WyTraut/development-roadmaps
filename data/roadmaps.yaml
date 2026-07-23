@@ -34,6 +34,7 @@ reporting_suite_source:
   page_registry_path: shared/page_registry.json
   server_path: server.py
   database_path: shared/db.py
+  fallback_snapshot_path: reporting_suite_snapshot.json
   purpose: Code-derived evidence of the reporting platform's built-in reach and automation.
 
 impact_dimensions:
