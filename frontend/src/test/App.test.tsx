@@ -363,9 +363,9 @@ describe("App", () => {
     render(<App />);
 
     expect(await screen.findByRole("heading", { name: "Reporting Suite" })).toBeVisible();
-    expect(screen.getByRole("combobox", { name: "Metrics page" })).toHaveValue(
-      "reporting-suite"
-    );
+    expect(
+      screen.getByRole("button", { name: "Switch to Activations Scrub Tool" })
+    ).toBeVisible();
     expect(screen.getByText("No code metrics available.")).toBeVisible();
     expect(window.location.hash).toBe("#metrics/reporting-suite");
   });
