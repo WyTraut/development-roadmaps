@@ -2632,23 +2632,12 @@ main.screen-metrics {
   border-top: 1px solid var(--line-strong);
 }
 
-.reporting-suite-kpis {
+.reporting-suite-kpi-band {
   display: grid;
-  grid-template-columns: minmax(260px, 0.82fr) minmax(0, 1.8fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   margin-top: 22px;
-  overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 6px;
-}
-
-.reporting-suite-primary-kpi {
-  display: grid;
-  min-height: 190px;
-  grid-template-columns: 36px minmax(0, 1fr);
-  align-content: center;
-  gap: 0 10px;
-  padding: 28px;
-  background: #eef2f7;
 }
 
 .reporting-suite-kpi-icon {
@@ -2662,23 +2651,16 @@ main.screen-metrics {
   color: #455d78;
 }
 
-.reporting-suite-primary-kpi > span:not(.reporting-suite-kpi-icon),
-.reporting-suite-kpi > span:not(.reporting-suite-kpi-icon) {
-  align-self: center;
+.reporting-suite-kpi-label {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
   color: var(--muted);
   font-size: 0.84rem;
   font-weight: 720;
 }
 
-.reporting-suite-primary-kpi > strong {
-  grid-column: 1 / -1;
-  margin-top: 18px;
-  color: #263d59;
-  font-size: 3.2rem;
-  line-height: 1;
-}
-
-.reporting-suite-primary-kpi > small,
 .reporting-suite-kpi > small {
   grid-column: 1 / -1;
   margin-top: 5px;
@@ -2687,22 +2669,24 @@ main.screen-metrics {
   font-weight: 650;
 }
 
-.reporting-suite-kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1px;
-  background: var(--line);
-}
-
 .reporting-suite-kpi {
   display: grid;
   min-width: 0;
-  min-height: 190px;
+  min-height: 176px;
   grid-template-columns: 36px minmax(0, 1fr);
   align-content: center;
   gap: 0 9px;
-  padding: 24px;
+  padding: 22px;
+  border-right: 1px solid var(--line);
   background: var(--surface);
+}
+
+.reporting-suite-kpi:first-child {
+  background: #eef2f7;
+}
+
+.reporting-suite-kpi:last-child {
+  border-right: 0;
 }
 
 .reporting-suite-kpi > strong {
@@ -2713,69 +2697,91 @@ main.screen-metrics {
   line-height: 1;
 }
 
-.reporting-suite-workspaces {
+.reporting-suite-kpi:first-child > strong {
+  color: #263d59;
+}
+
+.reporting-suite-adoption {
   margin-top: 24px;
   padding: 22px 28px 24px;
   background: #f7f8fa;
 }
 
-.reporting-suite-workspaces > header {
+.reporting-suite-adoption > header {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 20px;
 }
 
-.reporting-suite-workspaces h2 {
+.reporting-suite-adoption h2 {
   margin: 0;
   font-size: 1.05rem;
 }
 
-.reporting-suite-workspaces > header > strong {
-  color: #455d78;
+.reporting-suite-adoption > header > span {
+  color: var(--subtle);
   font-size: 0.82rem;
+  font-weight: 650;
 }
 
-.reporting-suite-workspace-chart {
+.reporting-suite-adoption-chart {
   display: grid;
-  gap: 10px;
+  height: 218px;
+  grid-template-columns: repeat(var(--month-count, 12), minmax(0, 1fr));
+  align-items: stretch;
+  gap: 14px;
   margin-top: 20px;
 }
 
-.reporting-suite-workspace-row {
+.reporting-suite-adoption-month {
   display: grid;
-  grid-template-columns: minmax(100px, 150px) minmax(120px, 1fr) 28px;
-  align-items: center;
-  gap: 14px;
+  min-width: 0;
+  grid-template-rows: 20px minmax(0, 1fr) 18px;
+  gap: 7px;
+  text-align: center;
 }
 
-.reporting-suite-workspace-row > span:first-child {
+.reporting-suite-adoption-month > strong {
   overflow: hidden;
-  color: var(--muted);
-  font-size: 0.8rem;
-  font-weight: 650;
+  color: var(--ink);
+  font-size: 0.72rem;
   text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
-.reporting-suite-workspace-track {
-  display: block;
-  height: 12px;
+.reporting-suite-adoption-month > span:last-child {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+
+.reporting-suite-adoption-track {
+  display: flex;
+  min-height: 0;
+  align-items: flex-end;
   overflow: hidden;
   background: #e1e5ea;
 }
 
-.reporting-suite-workspace-track > span {
+.reporting-suite-adoption-track > span {
   display: block;
-  height: 100%;
-  min-width: 4px;
+  width: 100%;
+  height: var(--bar-size);
+  min-height: 4px;
   background: #536f8f;
 }
 
-.reporting-suite-workspace-row > strong {
-  color: var(--ink);
-  font-size: 0.78rem;
-  text-align: right;
+.reporting-suite-adoption-empty {
+  display: flex;
+  height: 218px;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  margin-top: 20px;
+  border-top: 1px solid var(--line);
+  color: var(--subtle);
+  font-size: 0.82rem;
+  font-weight: 650;
 }
 
 .reporting-suite-source-note {
@@ -3487,8 +3493,23 @@ main.screen-metrics {
 }
 
 @media (max-width: 860px) {
-  .reporting-suite-kpis {
-    grid-template-columns: 1fr;
+  .reporting-suite-kpi-band {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .reporting-suite-kpi {
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .reporting-suite-kpi:nth-child(even) {
+    border-right: 0;
+  }
+
+  .reporting-suite-kpi:last-child {
+    grid-column: 1 / -1;
+    border-right: 0;
+    border-bottom: 0;
   }
 
   .metrics-aggregation-graphic {
@@ -3709,19 +3730,6 @@ main.screen-metrics {
     padding: 22px;
   }
 
-  .reporting-suite-primary-kpi {
-    min-height: 150px;
-    padding: 22px;
-  }
-
-  .reporting-suite-primary-kpi > strong {
-    font-size: 2.7rem;
-  }
-
-  .reporting-suite-kpi-grid {
-    grid-template-columns: 1fr;
-  }
-
   .reporting-suite-kpi {
     min-height: 112px;
     padding: 16px 18px;
@@ -3732,23 +3740,58 @@ main.screen-metrics {
     font-size: 1.85rem;
   }
 
-  .reporting-suite-workspaces {
+  .reporting-suite-adoption {
     padding: 20px 16px 22px;
   }
 
-  .reporting-suite-workspaces > header {
+  .reporting-suite-adoption > header {
     align-items: flex-start;
     flex-direction: column;
     gap: 5px;
   }
 
-  .reporting-suite-workspace-row {
-    grid-template-columns: minmax(82px, 110px) minmax(80px, 1fr) 24px;
-    gap: 9px;
+  .reporting-suite-adoption-chart {
+    height: auto;
+    grid-template-columns: 1fr;
+    gap: 8px;
   }
 
-  .reporting-suite-workspace-row > span:first-child {
+  .reporting-suite-adoption-month {
+    grid-template-columns: 42px minmax(0, 1fr) 52px;
+    grid-template-rows: 12px;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .reporting-suite-adoption-month > strong {
+    grid-column: 3;
+    grid-row: 1;
     font-size: 0.72rem;
+    text-align: right;
+  }
+
+  .reporting-suite-adoption-month > span:last-child {
+    grid-column: 1;
+    grid-row: 1;
+    text-align: left;
+  }
+
+  .reporting-suite-adoption-track {
+    width: 100%;
+    height: 10px;
+    grid-column: 2;
+    grid-row: 1;
+    align-items: stretch;
+  }
+
+  .reporting-suite-adoption-track > span {
+    width: var(--bar-size);
+    height: 100%;
+    min-width: 4px;
+  }
+
+  .reporting-suite-adoption-empty {
+    height: 148px;
   }
 
   .metrics-impact-primary > strong {

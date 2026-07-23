@@ -29,8 +29,8 @@ const evidence: MetricsEvidence = {
   reporting_suite: {
     id: "reporting_suite",
     name: "Reporting Suite",
-    source_url: "https://github.com/WyTraut/Private/tree/main",
-    source_ref: "main",
+    source_url: "https://github.com/WyTraut/development-roadmaps/issues/29",
+    source_ref: "fixture123",
     purpose: "Code-derived evidence of the reporting platform.",
     registered_views: 52,
     active_views: 47,
@@ -47,7 +47,29 @@ const evidence: MetricsEvidence = {
       { name: "Admin", active_views: 3 },
       { name: "Manager Views", active_views: 2 }
     ],
-    source_note: "Derived from source code."
+    source_note: "Derived from source code.",
+    report_views: 175,
+    total_views: 12450,
+    data_points: 987654,
+    unique_viewers: 84,
+    source_systems: [
+      "Slider",
+      "FlightDeck",
+      "Amdocs",
+      "SharePoint",
+      "SWIFT",
+      "UPS",
+      "ConcertTech",
+      "NSchedule"
+    ],
+    tracking_started: "2025-05-01T12:00:00Z",
+    last_aggregated: "2026-07-23T17:30:00Z",
+    monthly_views: [
+      { month: "2026-05", views: 1020 },
+      { month: "2026-06", views: 1330 },
+      { month: "2026-07", views: 1490 }
+    ],
+    privacy_note: "Aggregate metrics only."
   }
 };
 
@@ -135,7 +157,7 @@ describe("MetricsPage", () => {
     expect(screen.queryByText("Aggregate data only")).not.toBeInTheDocument();
   });
 
-  it("switches to Reporting Suite and renders code-derived capability metrics", async () => {
+  it("switches to Reporting Suite and renders reach and usage metrics", async () => {
     const user = userEvent.setup();
     render(<MetricsPage evidence={evidence} />);
 
@@ -145,27 +167,75 @@ describe("MetricsPage", () => {
       screen.getByRole("button", { name: "Switch to Activations Scrub Tool" })
     ).toBeVisible();
     expect(screen.getByRole("heading", { name: "Reporting Suite" })).toBeVisible();
-    const summary = screen.getByLabelText("Reporting Suite code capability summary");
-    expect(within(summary).getByText("Active views")).toBeVisible();
-    expect(within(summary).getByText("47")).toBeVisible();
-    expect(within(summary).getByText("of 52 registered")).toBeVisible();
-    expect(within(summary).getByText("API capabilities")).toBeVisible();
-    expect(within(summary).getByText("156")).toBeVisible();
-    expect(within(summary).getByText("Data tables")).toBeVisible();
-    expect(within(summary).getByText("38")).toBeVisible();
-    expect(within(summary).getByText("Automation steps")).toBeVisible();
-    expect(within(summary).getByText("26")).toBeVisible();
-    expect(within(summary).getByText("6 scheduled workflows")).toBeVisible();
+    const summary = screen.getByLabelText("Reporting Suite reach and usage summary");
+    expect(within(summary).getByText("Report pages")).toBeVisible();
+    expect(within(summary).getByText("175")).toBeVisible();
+    expect(within(summary).getByText("Total views")).toBeVisible();
+    expect(within(summary).getByText("12,450")).toBeVisible();
+    expect(within(summary).getByText("Data points")).toBeVisible();
+    expect(within(summary).getByText("987,654")).toBeVisible();
+    expect(within(summary).getByText("Unique viewers")).toBeVisible();
+    expect(within(summary).getByText("84")).toBeVisible();
+    expect(within(summary).getByText("Source systems")).toBeVisible();
+    expect(within(summary).getByText("8")).toBeVisible();
     expect(
       screen.getByRole("img", {
-        name: "Active views by workspace. Operations: 13, FIT: 10, Hub: 7, Offnet: 6, Tools: 6, Admin: 3, Manager Views: 2"
+        name: "Monthly Reporting Suite views. 2026-05: 1,020 views, 2026-06: 1,330 views, 2026-07: 1,490 views"
       })
     ).toBeVisible();
     expect(
-      screen.getByRole("link", { name: "View source code for Reporting Suite" })
+      screen.getByRole("link", { name: "View source metrics for Reporting Suite" })
     ).toHaveAttribute("href", evidence.reporting_suite?.source_url);
-    expect(screen.getByText("Derived from source code.")).toBeVisible();
+    expect(screen.getByText("Aggregate metrics only.")).toBeVisible();
     expect(screen.getByLabelText("Activations Scrub Tool aggregate summary")).not.toBeVisible();
+  });
+
+  it("explains the Reporting Suite counts in concise tooltips", async () => {
+    const user = userEvent.setup();
+    render(<MetricsPage evidence={evidence} activeView="reporting-suite" />);
+
+    await user.hover(screen.getByRole("button", { name: "About Report pages" }));
+    expect(screen.getByRole("tooltip")).toHaveTextContent(
+      "active route, named tab, scorecard, one-pager, embedded manager view, and Macias subview"
+    );
+    await user.unhover(screen.getByRole("button", { name: "About Report pages" }));
+
+    await user.hover(screen.getByRole("button", { name: "About Data points" }));
+    expect(screen.getByRole("tooltip")).toHaveTextContent("Zeroes count");
+    await user.unhover(screen.getByRole("button", { name: "About Data points" }));
+
+    await user.hover(screen.getByRole("button", { name: "About Unique viewers" }));
+    expect(screen.getByRole("tooltip")).toHaveTextContent("Only the aggregate count");
+    await user.unhover(screen.getByRole("button", { name: "About Unique viewers" }));
+
+    await user.hover(screen.getByRole("button", { name: "About Source systems" }));
+    expect(screen.getByRole("tooltip")).toHaveTextContent(
+      "Slider, FlightDeck, Amdocs, SharePoint, SWIFT, UPS, ConcertTech, NSchedule"
+    );
+  });
+
+  it("shows the workstation-sync state while retaining code-owned metrics", () => {
+    const reportingSuite = {
+      ...evidence.reporting_suite!,
+      total_views: null,
+      data_points: null,
+      unique_viewers: null,
+      tracking_started: null,
+      last_aggregated: null,
+      monthly_views: []
+    };
+    render(
+      <MetricsPage
+        evidence={{ sources: evidence.sources, reporting_suite: reportingSuite }}
+        activeView="reporting-suite"
+      />
+    );
+
+    const summary = screen.getByLabelText("Reporting Suite reach and usage summary");
+    expect(within(summary).getByText("175")).toBeVisible();
+    expect(within(summary).getByText("8")).toBeVisible();
+    expect(within(summary).getAllByText("--")).toHaveLength(3);
+    expect(screen.getAllByText("Awaiting workstation sync")).toHaveLength(2);
   });
 
   it("shows a Reporting Suite empty state when no code snapshot is available", async () => {

@@ -141,6 +141,11 @@ export interface ReportingSuiteWorkspaceMetric {
   active_views: number;
 }
 
+export interface ReportingSuiteMonthlyView {
+  month: string;
+  views: number;
+}
+
 export interface ReportingSuiteSnapshot {
   id: string;
   name: string;
@@ -155,6 +160,15 @@ export interface ReportingSuiteSnapshot {
   scheduled_workflows: number;
   workspaces: ReportingSuiteWorkspaceMetric[];
   source_note: string;
+  report_views: number;
+  total_views: number | null;
+  data_points: number | null;
+  unique_viewers: number | null;
+  source_systems: string[];
+  tracking_started: string | null;
+  last_aggregated: string | null;
+  monthly_views: ReportingSuiteMonthlyView[];
+  privacy_note: string;
 }
 
 export interface MetricsEvidence {

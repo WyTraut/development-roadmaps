@@ -19,7 +19,7 @@ import {
   X,
   type LucideIcon
 } from "lucide-react";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
 
 import type {
   MetricsEvidence,
@@ -30,6 +30,10 @@ import type {
 
 const wholeNumber = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 const oneDecimalNumber = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
+const compactNumber = new Intl.NumberFormat("en-US", {
+  notation: "compact",
+  maximumFractionDigits: 1
+});
 const projectionOrderTarget = 800;
 export type MetricsView = "activations" | "reporting-suite";
 const metricsViews: Array<{ id: MetricsView; label: string }> = [
@@ -90,6 +94,17 @@ function formatDatePart(timestamp: string): string {
     day: "numeric",
     year: "numeric"
   }).format(date);
+}
+
+function formatExecutiveNumber(value: number | null | undefined): string {
+  if (value === null || value === undefined) return "--";
+  return value >= 1_000_000 ? compactNumber.format(value) : wholeNumber.format(value);
+}
+
+function formatMonth(month: string): string {
+  const date = new Date(`${month}-01T00:00:00Z`);
+  if (Number.isNaN(date.getTime())) return month;
+  return new Intl.DateTimeFormat("en-US", { month: "short", timeZone: "UTC" }).format(date);
 }
 
 export default function MetricsPage({
@@ -174,9 +189,6 @@ function MetricsPageHeader({
   return (
     <header className="metrics-source-header metrics-page-header">
       <div>
-        {selectedView === "reporting-suite" ? (
-          <span className="section-kicker">Code-derived capability</span>
-        ) : null}
         <div className="metrics-title-switch">
           <h1 id="metrics-page-heading">{selectedTitle}</h1>
           <button
@@ -192,14 +204,18 @@ function MetricsPageHeader({
       {selectedView === "reporting-suite" ? (
         reportingSuiteSnapshot ? (
           <div className="metrics-source-meta">
-            <span>Source {reportingSuiteSnapshot.source_ref}</span>
+            <span>
+              {reportingSuiteSnapshot.last_aggregated
+                ? `Updated ${formatDatePart(reportingSuiteSnapshot.last_aggregated)}`
+                : "Awaiting workstation sync"}
+            </span>
             <a
               className="metrics-source-link"
               href={reportingSuiteSnapshot.source_url}
               target="_blank"
               rel="noreferrer"
-              aria-label={`View source code for ${reportingSuiteSnapshot.name}`}
-              title="View source repository"
+              aria-label={`View source metrics for ${reportingSuiteSnapshot.name}`}
+              title="View source issue"
             >
               <ExternalLink aria-hidden="true" size={18} />
             </a>
@@ -234,12 +250,15 @@ function MetricsEmptyState({ message }: { message: string }) {
 }
 
 function ReportingSuitePage({ snapshot }: { snapshot: ReportingSuiteSnapshot }) {
-  const maximumWorkspaceViews = Math.max(
+  const reportViews = snapshot.report_views ?? snapshot.active_views;
+  const sourceSystems = snapshot.source_systems ?? [];
+  const monthlyViews = snapshot.monthly_views ?? [];
+  const maximumMonthlyViews = Math.max(
     1,
-    ...snapshot.workspaces.map((workspace) => workspace.active_views)
+    ...monthlyViews.map((month) => month.views)
   );
-  const workspaceSummary = snapshot.workspaces
-    .map((workspace) => `${workspace.name}: ${workspace.active_views}`)
+  const monthlySummary = monthlyViews
+    .map((month) => `${month.month}: ${wholeNumber.format(month.views)} views`)
     .join(", ");
 
   return (
@@ -248,70 +267,92 @@ function ReportingSuitePage({ snapshot }: { snapshot: ReportingSuiteSnapshot }) 
       aria-labelledby="metrics-page-heading"
     >
       <section
-        className="reporting-suite-kpis"
-        aria-label={`${snapshot.name} code capability summary`}
+        className="reporting-suite-kpi-band"
+        aria-label={`${snapshot.name} reach and usage summary`}
       >
-        <div className="reporting-suite-primary-kpi">
-          <span className="reporting-suite-kpi-icon" aria-hidden="true">
-            <AppWindow size={22} />
-          </span>
-          <span>Active views</span>
-          <strong>{wholeNumber.format(snapshot.active_views)}</strong>
-          <small>of {wholeNumber.format(snapshot.registered_views)} registered</small>
-        </div>
-        <div className="reporting-suite-kpi-grid">
-          <ReportingSuiteKpi
-            icon={Layers3}
-            label="API capabilities"
-            value={snapshot.api_capabilities}
-          />
-          <ReportingSuiteKpi
-            icon={Database}
-            label="Data tables"
-            value={snapshot.data_tables}
-          />
-          <ReportingSuiteKpi
-            icon={ListChecks}
-            label="Automation steps"
-            value={snapshot.automation_steps}
-            detail={`${snapshot.scheduled_workflows} scheduled workflows`}
-          />
-        </div>
+        <ReportingSuiteKpi
+          icon={AppWindow}
+          label="Report pages"
+          value={reportViews}
+          helpText="Counts every active route, named tab, scorecard, one-pager, embedded manager view, and Macias subview. Aliases and filters are excluded."
+        />
+        <ReportingSuiteKpi
+          icon={BarChart3}
+          label="Total views"
+          value={snapshot.total_views}
+          helpText="All Reporting Suite page views since tracking began. Test and development traffic are excluded."
+          helpAlign="right"
+        />
+        <ReportingSuiteKpi
+          icon={Database}
+          label="Data points"
+          value={snapshot.data_points}
+          helpText="Non-empty values in physical reporting tables. Zeroes count; analytics, settings, logs, history, and database views do not."
+        />
+        <ReportingSuiteKpi
+          icon={UsersRound}
+          label="Unique viewers"
+          value={snapshot.unique_viewers}
+          helpText="Distinct viewers since tracking began. Only the aggregate count leaves the workstation."
+          helpAlign="right"
+        />
+        <ReportingSuiteKpi
+          icon={Layers3}
+          label="Source systems"
+          value={sourceSystems.length || undefined}
+          helpText={sourceSystems.length > 0
+            ? sourceSystems.join(", ")
+            : "Source-system inventory is unavailable."}
+          helpAlign="right"
+        />
       </section>
 
       <section
-        className="reporting-suite-workspaces"
-        aria-labelledby="reporting-suite-workspaces-heading"
+        className="reporting-suite-adoption"
+        aria-labelledby="reporting-suite-adoption-heading"
       >
         <header>
-          <h2 id="reporting-suite-workspaces-heading">Active views by workspace</h2>
-          <strong>{wholeNumber.format(snapshot.active_views)} total</strong>
+          <h2 id="reporting-suite-adoption-heading">Monthly adoption</h2>
+          {snapshot.tracking_started ? (
+            <span>Since {formatDatePart(snapshot.tracking_started)}</span>
+          ) : null}
         </header>
-        <div
-          className="reporting-suite-workspace-chart"
-          role="img"
-          aria-label={`Active views by workspace. ${workspaceSummary}`}
-        >
-          {snapshot.workspaces.map((workspace) => (
-            <div className="reporting-suite-workspace-row" key={workspace.name}>
-              <span>{workspace.name}</span>
-              <span className="reporting-suite-workspace-track" aria-hidden="true">
-                <span
-                  style={{
-                    width: `${(workspace.active_views / maximumWorkspaceViews) * 100}%`
-                  }}
-                />
-              </span>
-              <strong>{wholeNumber.format(workspace.active_views)}</strong>
-            </div>
-          ))}
-        </div>
+        {monthlyViews.length > 0 ? (
+          <div
+            className="reporting-suite-adoption-chart"
+            role="img"
+            aria-label={`Monthly Reporting Suite views. ${monthlySummary}`}
+            style={{ "--month-count": monthlyViews.length } as CSSProperties}
+          >
+            {monthlyViews.map((month) => {
+              const percentage = Math.max(3, (month.views / maximumMonthlyViews) * 100);
+              return (
+                <div
+                  className="reporting-suite-adoption-month"
+                  key={month.month}
+                  style={{ "--bar-size": `${percentage}%` } as CSSProperties}
+                >
+                  <strong>{formatExecutiveNumber(month.views)}</strong>
+                  <span className="reporting-suite-adoption-track" aria-hidden="true">
+                    <span />
+                  </span>
+                  <span>{formatMonth(month.month)}</span>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="reporting-suite-adoption-empty" role="status">
+            <BarChart3 aria-hidden="true" size={24} />
+            <span>Awaiting workstation sync</span>
+          </div>
+        )}
       </section>
 
-      <p className="reporting-suite-source-note">
+      {snapshot.privacy_note ? <p className="reporting-suite-source-note">
         <Info aria-hidden="true" size={16} />
-        {snapshot.source_note}
-      </p>
+        {snapshot.privacy_note}
+      </p> : null}
     </article>
   );
 }
@@ -320,21 +361,29 @@ function ReportingSuiteKpi({
   icon: Icon,
   label,
   value,
-  detail
+  helpText,
+  helpAlign = "left"
 }: {
   icon: LucideIcon;
   label: string;
-  value: number;
-  detail?: string;
+  value: number | null | undefined;
+  helpText: string;
+  helpAlign?: "left" | "right";
 }) {
+  const missing = value === null || value === undefined;
   return (
     <div className="reporting-suite-kpi">
       <span className="reporting-suite-kpi-icon" aria-hidden="true">
         <Icon size={20} />
       </span>
-      <span>{label}</span>
-      <strong>{wholeNumber.format(value)}</strong>
-      {detail ? <small>{detail}</small> : null}
+      <div className="reporting-suite-kpi-label">
+        <span>{label}</span>
+        <MetricInfo align={helpAlign} label={label} text={helpText} />
+      </div>
+      <strong title={missing ? undefined : wholeNumber.format(value)}>
+        {formatExecutiveNumber(value)}
+      </strong>
+      {missing ? <small>Awaiting sync</small> : null}
     </div>
   );
 }
