@@ -1,4 +1,4 @@
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 
@@ -76,6 +76,17 @@ const evidence: MetricsEvidence = {
 function evidenceWithProjection(minutes: number, orders: number): MetricsEvidence {
   return {
     sources: [{ ...evidence.sources[0], estimated_minutes_saved: minutes, total_scrubs: orders }]
+  };
+}
+
+function evidenceWithReportViews(reportViews: number): MetricsEvidence {
+  return {
+    sources: evidence.sources,
+    reporting_suite: {
+      ...evidence.reporting_suite!,
+      report_views: reportViews,
+      active_views: reportViews
+    }
   };
 }
 
@@ -178,6 +189,13 @@ describe("MetricsPage", () => {
     expect(within(summary).getByText("84")).toBeVisible();
     expect(within(summary).getByText("Source systems")).toBeVisible();
     expect(within(summary).getByText("8")).toBeVisible();
+    const universe = screen.getByRole("region", { name: "Report Universe" });
+    expect(within(universe).getByText("175 report pages")).toBeVisible();
+    expect(within(universe).getAllByTestId("report-universe-cluster")).toHaveLength(7);
+    expect(within(universe).getAllByTestId("report-universe-tile")).toHaveLength(175);
+    for (const cluster of within(universe).getAllByTestId("report-universe-cluster")) {
+      expect(within(cluster).getAllByTestId("report-universe-tile")).toHaveLength(25);
+    }
     expect(screen.getByRole("heading", { name: "Cumulative Views" })).toBeVisible();
     expect(
       screen.getByRole("img", {
@@ -189,6 +207,73 @@ describe("MetricsPage", () => {
     ).toHaveAttribute("href", evidence.reporting_suite?.source_url);
     expect(screen.getByText("Aggregate metrics only.")).toBeVisible();
     expect(screen.getByLabelText("Activations Scrub Tool aggregate summary")).not.toBeVisible();
+  });
+
+  it("distributes anonymous report tiles without exposing internal details", () => {
+    const { rerender } = render(
+      <MetricsPage evidence={evidenceWithReportViews(10)} activeView="reporting-suite" />
+    );
+
+    let universe = screen.getByRole("region", { name: "Report Universe" });
+    let clusters = within(universe).getAllByTestId("report-universe-cluster");
+    expect(clusters).toHaveLength(7);
+    expect(
+      clusters.map(
+        (cluster) => within(cluster).getAllByTestId("report-universe-tile").length
+      )
+    ).toEqual([2, 2, 2, 1, 1, 1, 1]);
+
+    for (const internalLabel of [
+      "Operations",
+      "FIT",
+      "Hub",
+      "Offnet",
+      "Tools",
+      "Admin",
+      "Manager Views",
+      "Slider",
+      "FlightDeck"
+    ]) {
+      expect(within(universe).queryByText(internalLabel)).not.toBeInTheDocument();
+    }
+
+    rerender(
+      <MetricsPage evidence={evidenceWithReportViews(3)} activeView="reporting-suite" />
+    );
+    universe = screen.getByRole("region", { name: "Report Universe" });
+    clusters = within(universe).getAllByTestId("report-universe-cluster");
+    expect(clusters).toHaveLength(3);
+    expect(within(universe).getAllByTestId("report-universe-tile")).toHaveLength(3);
+
+    rerender(
+      <MetricsPage evidence={evidenceWithReportViews(0)} activeView="reporting-suite" />
+    );
+    expect(screen.queryByRole("region", { name: "Report Universe" })).not.toBeInTheDocument();
+  });
+
+  it("highlights one anonymous report cluster on hover or focus", async () => {
+    const user = userEvent.setup();
+    render(<MetricsPage evidence={evidence} activeView="reporting-suite" />);
+
+    const universe = screen.getByRole("region", { name: "Report Universe" });
+    const clusters = within(universe).getAllByTestId("report-universe-cluster");
+
+    await user.hover(clusters[2]);
+    expect(clusters[2]).toHaveClass("is-active");
+    expect(clusters[0]).toHaveClass("is-muted");
+    expect(clusters[1]).toHaveClass("is-muted");
+
+    await user.unhover(clusters[2]);
+    expect(clusters[2]).not.toHaveClass("is-active");
+    expect(clusters[0]).not.toHaveClass("is-muted");
+
+    fireEvent.focus(clusters[4]);
+    expect(clusters[4]).toHaveClass("is-active");
+    expect(clusters[3]).toHaveClass("is-muted");
+
+    fireEvent.blur(clusters[4]);
+    expect(clusters[4]).not.toHaveClass("is-active");
+    expect(clusters[3]).not.toHaveClass("is-muted");
   });
 
   it("explains the Reporting Suite counts in concise tooltips", async () => {
