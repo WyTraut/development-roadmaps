@@ -1,0 +1,9 @@
+SCHEMA = """
+CREATE TABLE IF NOT EXISTS orders (
+    id INTEGER PRIMARY KEY
+);
+
+CREATE TABLE IF NOT EXISTS task_history (
+    id INTEGER PRIMARY KEY
+);
+"""

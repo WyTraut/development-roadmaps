@@ -27,6 +27,11 @@ from backend.app.metrics import (  # noqa: E402
     build_metrics_evidence,
     fetch_github_issue_body,
 )
+from backend.app.reporting_suite import (  # noqa: E402
+    RepositoryFileLoader,
+    build_reporting_suite_snapshot,
+    fetch_github_repository_file,
+)
 
 
 STAGE_SELECTIONS = ("none", "foundation", "scale", "full")
@@ -45,6 +50,7 @@ def build_static_bundle(
     data_path: Path,
     github_token: str | None = None,
     issue_body_loader: IssueBodyLoader = fetch_github_issue_body,
+    repository_file_loader: RepositoryFileLoader = fetch_github_repository_file,
 ) -> dict[str, Any]:
     raw = yaml.safe_load(data_path.read_text(encoding="utf-8"))
     config = PortfolioConfig.model_validate(raw)
@@ -57,6 +63,11 @@ def build_static_bundle(
         config.metrics_sources,
         github_token=github_token,
         issue_body_loader=issue_body_loader,
+    )
+    metrics.reporting_suite = build_reporting_suite_snapshot(
+        config.reporting_suite_source,
+        github_token=github_token,
+        repository_file_loader=repository_file_loader,
     )
     calculator = PortfolioCalculator(config)
     roadmap_ids = [roadmap.id for roadmap in config.roadmaps]
@@ -109,7 +120,9 @@ def main() -> None:
     )
     print(
         f"Exported {len(bundle['scenarios'])} scenarios and "
-        f"{len(bundle['metrics']['sources'])} metrics source(s) to {args.output}"
+        f"{len(bundle['metrics']['sources'])} live metrics source(s) plus "
+        f"{'1' if bundle['metrics']['reporting_suite'] else '0'} code snapshot(s) "
+        f"to {args.output}"
     )
 
 

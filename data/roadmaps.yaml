@@ -25,6 +25,17 @@ metrics_sources:
     minutes_saved_per_warehouse_query: 2
     purpose: Adoption and value evidence from real-world scrubber usage, independent of roadmap scenario selections.
 
+reporting_suite_source:
+  id: reporting_suite
+  name: Reporting Suite
+  repository: WyTraut/Private
+  ref: main
+  requires_auth: true
+  page_registry_path: shared/page_registry.json
+  server_path: server.py
+  database_path: shared/db.py
+  purpose: Code-derived evidence of the reporting platform's built-in reach and automation.
+
 impact_dimensions:
   - key: efficiency
     label: Efficiency

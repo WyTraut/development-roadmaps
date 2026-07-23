@@ -25,7 +25,30 @@ const evidence: MetricsEvidence = {
       ],
       privacy_note: "Metrics are aggregate only and omit task IDs and operational details."
     }
-  ]
+  ],
+  reporting_suite: {
+    id: "reporting_suite",
+    name: "Reporting Suite",
+    source_url: "https://github.com/WyTraut/Private/tree/main",
+    source_ref: "main",
+    purpose: "Code-derived evidence of the reporting platform.",
+    registered_views: 52,
+    active_views: 47,
+    api_capabilities: 156,
+    data_tables: 38,
+    automation_steps: 26,
+    scheduled_workflows: 6,
+    workspaces: [
+      { name: "Operations", active_views: 13 },
+      { name: "FIT", active_views: 10 },
+      { name: "Hub", active_views: 7 },
+      { name: "Offnet", active_views: 6 },
+      { name: "Tools", active_views: 6 },
+      { name: "Admin", active_views: 3 },
+      { name: "Manager Views", active_views: 2 }
+    ],
+    source_note: "Derived from source code."
+  }
 };
 
 function evidenceWithProjection(minutes: number, orders: number): MetricsEvidence {
@@ -110,6 +133,50 @@ describe("MetricsPage", () => {
       evidence.sources[0].source_url
     );
     expect(screen.queryByText("Aggregate data only")).not.toBeInTheDocument();
+  });
+
+  it("switches to Reporting Suite and renders code-derived capability metrics", async () => {
+    const user = userEvent.setup();
+    render(<MetricsPage evidence={evidence} />);
+
+    await user.click(screen.getByRole("tab", { name: "Reporting Suite" }));
+
+    expect(screen.getByRole("tab", { name: "Reporting Suite" })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    );
+    expect(screen.getByRole("heading", { name: "Reporting Suite" })).toBeVisible();
+    const summary = screen.getByLabelText("Reporting Suite code capability summary");
+    expect(within(summary).getByText("Active views")).toBeVisible();
+    expect(within(summary).getByText("47")).toBeVisible();
+    expect(within(summary).getByText("of 52 registered")).toBeVisible();
+    expect(within(summary).getByText("API capabilities")).toBeVisible();
+    expect(within(summary).getByText("156")).toBeVisible();
+    expect(within(summary).getByText("Data tables")).toBeVisible();
+    expect(within(summary).getByText("38")).toBeVisible();
+    expect(within(summary).getByText("Automation steps")).toBeVisible();
+    expect(within(summary).getByText("26")).toBeVisible();
+    expect(within(summary).getByText("6 scheduled workflows")).toBeVisible();
+    expect(
+      screen.getByRole("img", {
+        name: "Active views by workspace. Operations: 13, FIT: 10, Hub: 7, Offnet: 6, Tools: 6, Admin: 3, Manager Views: 2"
+      })
+    ).toBeVisible();
+    expect(
+      screen.getByRole("link", { name: "View source code for Reporting Suite" })
+    ).toHaveAttribute("href", evidence.reporting_suite?.source_url);
+    expect(screen.getByText("Derived from source code.")).toBeVisible();
+    expect(screen.getByLabelText("Activations Scrub Tool aggregate summary")).not.toBeVisible();
+  });
+
+  it("shows a Reporting Suite empty state when no code snapshot is available", async () => {
+    const user = userEvent.setup();
+    render(<MetricsPage evidence={{ sources: evidence.sources }} />);
+
+    await user.click(screen.getByRole("tab", { name: "Reporting Suite" }));
+
+    expect(screen.getByRole("heading", { name: "Reporting Suite" })).toBeVisible();
+    expect(screen.getByText("No code metrics available.")).toBeVisible();
   });
 
   it("explains the Activations Scrub Tool workflow and restores focus after every close path", async () => {

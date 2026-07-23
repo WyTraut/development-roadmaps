@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "pages": [
+    {
+      "id": "operations-overview",
+      "section": "Operations",
+      "status": "active"
+    },
+    {
+      "id": "operations-detail",
+      "section": "Operations",
+      "status": "active"
+    },
+    {
+      "id": "fit-overview",
+      "section": "FIT",
+      "status": "active"
+    },
+    {
+      "id": "legacy-view",
+      "section": "Operations",
+      "status": "retired"
+    }
+  ]
+}

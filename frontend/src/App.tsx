@@ -42,7 +42,7 @@ import { flushSync } from "react-dom";
 
 import { calculateScenario, fetchMetrics, fetchPortfolio } from "./api";
 import { formatNumberRange, sentenceCase } from "./format";
-import MetricsPage from "./MetricsPage";
+import MetricsPage, { type MetricsView } from "./MetricsPage";
 import { readUrlState, scenarioSearch, scenarioUrl } from "./urlState";
 import type {
   Accent,
@@ -65,6 +65,14 @@ type ViewName = "comparison" | "delivery" | "assumptions";
 type AppScreen = "chooser" | "editor" | "portfolio" | "metrics";
 
 const METRICS_ROUTE_HASH = "#metrics";
+const REPORTING_SUITE_ROUTE_HASH = "#metrics/reporting-suite";
+
+function metricsViewFromHash(hash: string): MetricsView | null {
+  const normalized = hash.toLowerCase();
+  if (normalized === REPORTING_SUITE_ROUTE_HASH) return "reporting-suite";
+  if (normalized === METRICS_ROUTE_HASH) return "activations";
+  return null;
+}
 
 interface DrawerState {
   roadmap: Roadmap;
@@ -119,8 +127,11 @@ function App() {
   const [executionMode, setExecutionMode] = useState<ExecutionMode>("parallel");
   const [result, setResult] = useState<ScenarioResult | null>(null);
   const [metrics, setMetrics] = useState<MetricsEvidence>({ sources: [] });
-  const [screen, setScreen] = useState<AppScreen>(() =>
-    window.location.hash.toLowerCase() === METRICS_ROUTE_HASH ? "metrics" : "chooser"
+  const [metricsView, setMetricsView] = useState<MetricsView>(
+    () => metricsViewFromHash(window.location.hash) ?? "activations"
+  );
+  const [screen, setScreen] = useState<AppScreen>(
+    () => metricsViewFromHash(window.location.hash) ? "metrics" : "chooser"
   );
   const [activeRoadmapId, setActiveRoadmapId] = useState<string | null>(null);
   const [zoomingRoadmapId, setZoomingRoadmapId] = useState<string | null>(null);
@@ -188,6 +199,21 @@ function App() {
 
   useEffect(() => () => {
     if (zoomTimerRef.current !== null) window.clearTimeout(zoomTimerRef.current);
+  }, []);
+
+  useEffect(() => {
+    const syncMetricsRoute = () => {
+      const routeView = metricsViewFromHash(window.location.hash);
+      if (!routeView) return;
+      setMetricsView(routeView);
+      setScreen("metrics");
+    };
+    window.addEventListener("hashchange", syncMetricsRoute);
+    window.addEventListener("popstate", syncMetricsRoute);
+    return () => {
+      window.removeEventListener("hashchange", syncMetricsRoute);
+      window.removeEventListener("popstate", syncMetricsRoute);
+    };
   }, []);
 
   const pathResults = useMemo(
@@ -428,7 +454,22 @@ function App() {
 
   function showMetrics() {
     setScreen("metrics");
-    updateScreenRoute(METRICS_ROUTE_HASH);
+    updateScreenRoute(
+      metricsView === "reporting-suite"
+        ? REPORTING_SUITE_ROUTE_HASH
+        : METRICS_ROUTE_HASH
+    );
+    document.documentElement.scrollTop = 0;
+  }
+
+  function showMetricsView(view: MetricsView) {
+    setMetricsView(view);
+    setScreen("metrics");
+    updateScreenRoute(
+      view === "reporting-suite"
+        ? REPORTING_SUITE_ROUTE_HASH
+        : METRICS_ROUTE_HASH
+    );
     document.documentElement.scrollTop = 0;
   }
 
@@ -630,7 +671,11 @@ function App() {
         </section>
 
         <section className="metrics-screen" hidden={screen !== "metrics"}>
-          <MetricsPage evidence={metrics} />
+          <MetricsPage
+            evidence={metrics}
+            activeView={metricsView}
+            onViewChange={showMetricsView}
+          />
         </section>
       </main>
 

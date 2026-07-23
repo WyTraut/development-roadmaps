@@ -8,15 +8,28 @@ import yaml
 
 from backend.app.metrics import MetricsExportError, parse_metrics_issue
 from backend.app.models import PortfolioConfig
+from backend.app.reporting_suite import parse_reporting_suite_source
 from backend.scripts.export_static import build_static_bundle, scenario_key
 
 
 ROOT = Path(__file__).resolve().parents[2]
 ISSUE_FIXTURE = ROOT / "backend" / "tests" / "fixtures" / "l2l_metrics_issue.md"
+REPORTING_SUITE_FIXTURES = (
+    ROOT / "backend" / "tests" / "fixtures" / "reporting_suite"
+)
 
 
 def issue_body_loader(*_: object) -> str:
     return ISSUE_FIXTURE.read_text(encoding="utf-8")
+
+
+def repository_file_loader(_: object, path: str, __: object) -> str:
+    fixture_name = {
+        "shared/page_registry.json": "page_registry.json",
+        "server.py": "server.py",
+        "shared/db.py": "db.py",
+    }[path]
+    return (REPORTING_SUITE_FIXTURES / fixture_name).read_text(encoding="utf-8")
 
 
 def test_static_export_contains_every_scenario() -> None:
@@ -24,6 +37,7 @@ def test_static_export_contains_every_scenario() -> None:
         ROOT / "data" / "roadmaps.yaml",
         github_token="test-token",
         issue_body_loader=issue_body_loader,
+        repository_file_loader=repository_file_loader,
     )
 
     assert len(bundle["scenarios"]) == 128
@@ -45,6 +59,8 @@ def test_static_export_contains_every_scenario() -> None:
     assert baseline["execution_mode"] == "parallel"
     assert len(baseline["paths"]) == 3
     assert bundle["metrics"]["sources"][0]["id"] == "l2l_scrubber"
+    assert bundle["metrics"]["reporting_suite"]["id"] == "reporting_suite"
+    assert bundle["metrics"]["reporting_suite"]["active_views"] == 3
     assert "redacted" not in json.dumps(bundle["metrics"])
     assert "Client Totals" not in json.dumps(bundle["metrics"])
 
@@ -66,11 +82,40 @@ def test_metrics_issue_parser_normalizes_aggregate_sections() -> None:
     assert "task IDs" in snapshot.privacy_note
 
 
+def test_reporting_suite_parser_derives_capabilities_from_source() -> None:
+    raw = yaml.safe_load((ROOT / "data" / "roadmaps.yaml").read_text(encoding="utf-8"))
+    source = PortfolioConfig.model_validate(raw).reporting_suite_source
+    assert source is not None
+
+    snapshot = parse_reporting_suite_source(
+        source,
+        page_registry_text=repository_file_loader(
+            source, source.page_registry_path, "test-token"
+        ),
+        server_text=repository_file_loader(source, source.server_path, "test-token"),
+        database_text=repository_file_loader(
+            source, source.database_path, "test-token"
+        ),
+    )
+
+    assert snapshot.registered_views == 4
+    assert snapshot.active_views == 3
+    assert snapshot.api_capabilities == 2
+    assert snapshot.data_tables == 2
+    assert snapshot.automation_steps == 3
+    assert snapshot.scheduled_workflows == 2
+    assert [
+        (workspace.name, workspace.active_views)
+        for workspace in snapshot.workspaces
+    ] == [("Operations", 2), ("FIT", 1)]
+
+
 def test_static_export_requires_token_for_private_metrics_source() -> None:
     with pytest.raises(MetricsExportError, match="METRICS_GITHUB_TOKEN is required"):
         build_static_bundle(
             ROOT / "data" / "roadmaps.yaml",
             issue_body_loader=issue_body_loader,
+            repository_file_loader=repository_file_loader,
         )
 
 

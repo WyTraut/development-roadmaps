@@ -355,6 +355,20 @@ describe("App", () => {
     expect(window.location.hash).toBe("#metrics");
   });
 
+  it("opens Reporting Suite directly from its metrics URL", async () => {
+    window.history.replaceState(null, "", "/#metrics/reporting-suite");
+
+    render(<App />);
+
+    expect(await screen.findByRole("heading", { name: "Reporting Suite" })).toBeVisible();
+    expect(screen.getByRole("tab", { name: "Reporting Suite" })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    );
+    expect(screen.getByText("No code metrics available.")).toBeVisible();
+    expect(window.location.hash).toBe("#metrics/reporting-suite");
+  });
+
   it("transitions the selected roadmap before opening its editor", async () => {
     vi.stubGlobal("matchMedia", vi.fn(() => ({
       matches: false,
