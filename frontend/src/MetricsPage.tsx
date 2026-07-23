@@ -35,6 +35,7 @@ const compactNumber = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 1
 });
 const projectionOrderTarget = 800;
+const reportUniverseClusterLimit = 7;
 export type MetricsView = "activations" | "reporting-suite";
 const metricsViews: Array<{ id: MetricsView; label: string }> = [
   { id: "activations", label: "Activations Scrub Tool" },
@@ -120,6 +121,19 @@ function buildCumulativeMonthlyViews(
     runningTotal += month.views;
     return { ...month, views: runningTotal };
   });
+}
+
+function buildReportUniverseClusters(reportViews: number): number[] {
+  const tileCount = Math.max(0, Math.floor(reportViews));
+  const clusterCount = Math.min(reportUniverseClusterLimit, tileCount);
+  if (clusterCount === 0) return [];
+
+  const tilesPerCluster = Math.floor(tileCount / clusterCount);
+  const remainder = tileCount % clusterCount;
+  return Array.from(
+    { length: clusterCount },
+    (_, index) => tilesPerCluster + (index < remainder ? 1 : 0)
+  );
 }
 
 export default function MetricsPage({
@@ -326,6 +340,8 @@ function ReportingSuitePage({ snapshot }: { snapshot: ReportingSuiteSnapshot }) 
         />
       </section>
 
+      <ReportUniverse reportViews={reportViews} />
+
       <section
         className="reporting-suite-adoption"
         aria-labelledby="reporting-suite-adoption-heading"
@@ -376,6 +392,64 @@ function ReportingSuitePage({ snapshot }: { snapshot: ReportingSuiteSnapshot }) 
         {snapshot.privacy_note}
       </p> : null}
     </article>
+  );
+}
+
+function ReportUniverse({ reportViews }: { reportViews: number }) {
+  const clusters = buildReportUniverseClusters(reportViews);
+  const [hoveredCluster, setHoveredCluster] = useState<number | null>(null);
+  const [focusedCluster, setFocusedCluster] = useState<number | null>(null);
+  const activeCluster = hoveredCluster ?? focusedCluster;
+  if (clusters.length === 0) return null;
+
+  return (
+    <section
+      className="report-universe"
+      aria-labelledby="report-universe-heading"
+    >
+      <header>
+        <h2 id="report-universe-heading">Report Universe</h2>
+        <span>
+          {wholeNumber.format(reportViews)} {reportViews === 1 ? "report page" : "report pages"}
+        </span>
+      </header>
+      <div
+        className={`report-universe-clusters${
+          activeCluster === null ? "" : " has-active-cluster"
+        }`}
+        style={{ "--cluster-count": clusters.length } as CSSProperties}
+      >
+        {clusters.map((tileCount, clusterIndex) => (
+          <button
+            className={`report-universe-cluster${
+              activeCluster === clusterIndex ? " is-active" : ""
+            }${
+              activeCluster !== null && activeCluster !== clusterIndex
+                ? " is-muted"
+                : ""
+            }`}
+            data-testid="report-universe-cluster"
+            type="button"
+            aria-label={`Highlight anonymous reporting group ${clusterIndex + 1}`}
+            onMouseEnter={() => setHoveredCluster(clusterIndex)}
+            onMouseLeave={() => setHoveredCluster(null)}
+            onFocus={() => setFocusedCluster(clusterIndex)}
+            onBlur={() => setFocusedCluster(null)}
+            onClick={() => setFocusedCluster(clusterIndex)}
+            key={clusterIndex}
+          >
+            {Array.from({ length: tileCount }, (_, tileIndex) => (
+              <span
+                className="report-universe-tile"
+                data-testid="report-universe-tile"
+                aria-hidden="true"
+                key={tileIndex}
+              />
+            ))}
+          </button>
+        ))}
+      </div>
+    </section>
   );
 }
 

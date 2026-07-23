@@ -2701,6 +2701,104 @@ main.screen-metrics {
   color: #263d59;
 }
 
+.report-universe {
+  margin-top: 24px;
+  padding: 22px 28px 24px;
+  background: #f4f6f8;
+}
+
+.report-universe > header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.report-universe h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.report-universe > header > span {
+  color: var(--subtle);
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.report-universe-clusters {
+  display: grid;
+  grid-template-columns: repeat(var(--cluster-count, 7), minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.report-universe-cluster {
+  --cluster-color: #2f6f8f;
+  display: grid;
+  min-width: 0;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-content: start;
+  gap: 5px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.report-universe-cluster:nth-child(2) {
+  --cluster-color: #1b7d72;
+}
+
+.report-universe-cluster:nth-child(3) {
+  --cluster-color: #6d8744;
+}
+
+.report-universe-cluster:nth-child(4) {
+  --cluster-color: #c28a32;
+}
+
+.report-universe-cluster:nth-child(5) {
+  --cluster-color: #b85f57;
+}
+
+.report-universe-cluster:nth-child(6) {
+  --cluster-color: #80658d;
+}
+
+.report-universe-cluster:nth-child(7) {
+  --cluster-color: #66747d;
+}
+
+.report-universe-cluster.is-active {
+  transform: translateY(-3px);
+}
+
+.report-universe-cluster.is-muted {
+  opacity: 0.2;
+}
+
+.report-universe-cluster:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 5px;
+}
+
+.report-universe-tile {
+  display: block;
+  min-width: 0;
+  aspect-ratio: 1;
+  border-radius: 2px;
+  background: var(--cluster-color);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 24%);
+  transition: box-shadow 160ms ease;
+}
+
+.report-universe-cluster.is-active .report-universe-tile {
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 36%),
+    0 3px 8px rgb(29 39 49 / 18%);
+}
+
 .reporting-suite-adoption {
   margin-top: 24px;
   padding: 22px 28px 24px;
@@ -3738,6 +3836,19 @@ main.screen-metrics {
   .reporting-suite-kpi > strong {
     margin-top: 12px;
     font-size: 1.85rem;
+  }
+
+  .report-universe {
+    padding: 20px 16px 22px;
+  }
+
+  .report-universe-clusters {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .report-universe-cluster {
+    gap: 3px;
   }
 
   .reporting-suite-adoption {
